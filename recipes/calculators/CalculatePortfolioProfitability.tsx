@@ -9,6 +9,7 @@ interface TradeData {
   PriceEntry: string;
   ActiveAllocation: string;
   TradeDate: string;
+  TradeDirection: string;
   State: boolean;
 }
 
@@ -22,6 +23,7 @@ const CalculatePortfolioProfitability: React.FC<Props> = ({ positions, viewMode 
     try {
       const prices = JSON.parse(trade.PriceEntry);
       const allocations = JSON.parse(trade.ActiveAllocation);
+      const isBuy = trade.TradeDirection === "Buy"; // ✅ Detectamos si es Buy o Sell
 
       let totalQuantity = 1.0;
       let averagePrice = parseFloat(prices[0].price);
@@ -46,7 +48,11 @@ const CalculatePortfolioProfitability: React.FC<Props> = ({ positions, viewMode 
           let sellPercentage = parseFloat(allocations[i].activeAllocation) / 100;
           let quantitySold = totalQuantity * sellPercentage;
           totalQuantity -= quantitySold;
-          let profit = quantitySold * (sellPrice - averagePrice);
+
+          let profit = isBuy
+            ? quantitySold * (sellPrice - averagePrice) // ✅ Buy (precio actual - promedio)
+            : quantitySold * (averagePrice - sellPrice); // ✅ Sell (promedio - precio actual)
+
           profits.push(profit);
         }
       }
@@ -78,8 +84,14 @@ const CalculatePortfolioProfitability: React.FC<Props> = ({ positions, viewMode 
       <View style={styles.row}>
         <MaterialIcons name="trending-up" size={16} color="white" />
         <Text style={styles.label}>PProf:</Text>
-        <Text style={styles.value}> {totalProfitability.toFixed(2)}%</Text>  
-        {/* 🔹 Espacio agregado antes del valor */}
+        <Text
+          style={[
+            styles.value,
+            { color: totalProfitability >= 0 ? "green" : "red" }, // ✅ Indicador de color
+          ]}
+        >
+          {totalProfitability.toFixed(2)}%
+        </Text>
       </View>
     </View>
   );
@@ -123,8 +135,7 @@ const styles = StyleSheet.create({
     textAlign: "right",
     fontSize: 14,
     fontWeight: "bold",
-    color: "white",
-    marginLeft: 5,  // 🔹 Pequeño espacio entre el label y el valor
+    marginLeft: 5,
   },
 });
 
