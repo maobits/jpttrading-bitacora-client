@@ -244,11 +244,7 @@ const SnackHistoricalSymbol: React.FC<SnackHistoricalSymbolProps> = ({
           </View>
         </View>
       )}
-      {/* Integración del componente SnackHistoricalEntries */}
-      <SnackHistoricalEntries
-        priceHistory={priceHistory}
-        activeAllocationHistory={activeAllocationHistory}
-      />
+     
     </View>
   );
 };

@@ -22,7 +22,7 @@ import SnackPositionTable from "@/components/snacks/positions/SnackPositionTable
 import SnackNewPosition from "@/components/snacks/positions/SnackNewPosition";
 import { useAuth } from "@/hooks/recipes/authService"; // Servicio de autenticación
 import { MaterialIcons } from "@expo/vector-icons"; // ✅ Importar el icono de MaterialIcons
-import CalculatePortfolioProfitability from "@/recipes/calculators/CalculatePortfolioProfitability";
+import CalculatePortfolioProfitability from "@/recipes/calculators/CalculateProfitabilityList";
 
 // Define the Position type
 interface Position {
@@ -94,7 +94,7 @@ export default function ManagePositions() {
  
 
   {/* 📌 Aquí agregamos la rentabilidad del portafolio debajo del título */}
-  <CalculatePortfolioProfitability positions={positions} viewMode={viewMode} />
+  <CalculatePortfolioProfitability trades={positions} viewMode={viewMode} />
 
   <View style={styles.switchContainer}>
     <View style={styles.switchGroup}>
