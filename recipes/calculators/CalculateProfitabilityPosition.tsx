@@ -1,4 +1,8 @@
 import React from "react";
+import { View, Text, StyleSheet } from "react-native";
+import { MaterialIcons} from "@expo/vector-icons";
+
+
 
 interface TradeData {
   id: number;
@@ -19,7 +23,7 @@ interface ProfitabilityResult {
   Symbol: string;
   TradeDate: string;
   NewAveragePrice: number;
-  ActiveAllocation: string;  // Ahora es string con porcentaje
+  ActiveAllocation: string; // Ahora es string con porcentaje
   ProfitPartial: number;
   ProfitabilityPartial: number;
   ProfitClose: number;
@@ -28,7 +32,15 @@ interface ProfitabilityResult {
   TotalProfitability: number;
 }
 
-const CalculateProfitabilityPosition: React.FC<{ trade: TradeData }> = ({ trade }) => {
+interface Props {
+  trade: TradeData;
+  viewMode: string; // Agregamos la propiedad viewMode aquí
+}
+
+const CalculateProfitabilityPosition: React.FC<{ trade: TradeData, viewMode: String }> = ({
+  trade,
+  viewMode,
+}) => {
   const calculateProfitability = (trade: TradeData): ProfitabilityResult => {
     const prices = JSON.parse(trade.PriceEntry);
     const allocations = JSON.parse(trade.ActiveAllocation);
@@ -40,12 +52,16 @@ const CalculateProfitabilityPosition: React.FC<{ trade: TradeData }> = ({ trade 
     // 📌 Procesar adiciones
     for (let i = 1; i < prices.length; i++) {
       if (prices[i].type === "add") {
-        let newQuantity = totalQuantity * (1 + parseFloat(allocations[i].activeAllocation) / 100);
+        let newQuantity =
+          totalQuantity *
+          (1 + parseFloat(allocations[i].activeAllocation) / 100);
         averagePrice =
-          (totalQuantity * averagePrice + (newQuantity - totalQuantity) * parseFloat(prices[i].price)) /
+          (totalQuantity * averagePrice +
+            (newQuantity - totalQuantity) * parseFloat(prices[i].price)) /
           newQuantity;
         totalQuantity = newQuantity;
-        activeAllocationPercentage *= (1 + parseFloat(allocations[i].activeAllocation) / 100);
+        activeAllocationPercentage *=
+          1 + parseFloat(allocations[i].activeAllocation) / 100;
       }
     }
 
@@ -68,7 +84,7 @@ const CalculateProfitabilityPosition: React.FC<{ trade: TradeData }> = ({ trade 
         profitabilities.push(profitability);
 
         // 🟢 Actualizar la asignación activa
-        activeAllocationPercentage *= (1 - sellPercentage);
+        activeAllocationPercentage *= 1 - sellPercentage;
       }
     }
 
@@ -86,9 +102,18 @@ const CalculateProfitabilityPosition: React.FC<{ trade: TradeData }> = ({ trade 
       NewAveragePrice: parseFloat(averagePrice.toFixed(2)),
       ActiveAllocation: `${activeAllocationPercentage.toFixed(2)}%`, // Formato de porcentaje
       ProfitPartial: profits.length > 1 ? parseFloat(profits[0].toFixed(3)) : 0,
-      ProfitabilityPartial: profitabilities.length > 1 ? parseFloat(profitabilities[0].toFixed(2)) : 0,
-      ProfitClose: profits.length > 0 ? parseFloat(profits[profits.length - 1].toFixed(3)) : 0,
-      ProfitabilityClose: profitabilities.length > 0 ? parseFloat(profitabilities[profitabilities.length - 1].toFixed(2)) : 0,
+      ProfitabilityPartial:
+        profitabilities.length > 1
+          ? parseFloat(profitabilities[0].toFixed(2))
+          : 0,
+      ProfitClose:
+        profits.length > 0
+          ? parseFloat(profits[profits.length - 1].toFixed(3))
+          : 0,
+      ProfitabilityClose:
+        profitabilities.length > 0
+          ? parseFloat(profitabilities[profitabilities.length - 1].toFixed(2))
+          : 0,
       TotalProfit: parseFloat(totalProfit.toFixed(3)),
       TotalProfitability: parseFloat(totalProfitability.toFixed(2)),
     };
@@ -97,20 +122,65 @@ const CalculateProfitabilityPosition: React.FC<{ trade: TradeData }> = ({ trade 
   const result = calculateProfitability(trade);
 
   return (
-    <div>
-      <h2>Resultados de Rentabilidad para {result.Symbol}</h2>
-      <p>Fecha de la operación: {result.TradeDate}</p>
-      <p>Nuevo Precio Promedio: ${result.NewAveragePrice}</p>
-      <p>Ganancia Toma Parcial: ${result.ProfitPartial}</p>
-      <p>Rentabilidad Toma Parcial: {result.ProfitabilityPartial}%</p>
-      <p>Ganancia Cierre Total: ${result.ProfitClose}</p>
-      <p>Rentabilidad Cierre Total: {result.ProfitabilityClose}%</p>
-      <p>Ganancia Total: ${result.TotalProfit}</p>
-      <p>Rentabilidad Total: {result.TotalProfitability}%</p>
-      <h3>Asignación Activa:</h3>
-      <p>{result.ActiveAllocation}</p>
-    </div>
+    <>
+    {viewMode === "card" ? (
+      <View>
+        {/* Rentabilidad Total */}
+        <View style={styles.row}>
+  <MaterialIcons name="trending-up" size={20} color="white" />
+  <Text style={styles.label}>Rentabilidad Total:</Text>
+  <Text style={styles.value}>{result.TotalProfitability}%</Text>
+</View>
+
+        {/* Asignación Activa */}
+        <View style={styles.row}>
+          <MaterialIcons name="pie-chart" size={20} color="white" />
+          <Text style={[styles.label, { color: "white" }]}>
+            Asignación Activa:
+          </Text>
+          <Text style={[styles.value, { color: "white" }]}>
+            {result.ActiveAllocation}
+          </Text>
+        </View>
+      </View>
+    ) : (
+      <Text style={[styles.tableText, { color: "white" }]}>
+        RT {result.TotalProfitability}% / AA {result.ActiveAllocation}
+      </Text>
+    )}
+  </>
   );
 };
 
+const styles = StyleSheet.create({
+    row: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between", // 🔹 Asegura distribución correcta
+      marginVertical: 5,
+    },
+    label: {
+      flex: 1, // 🔹 Permite que el texto de la izquierda ocupe espacio
+      fontSize: 14,
+      fontWeight: "bold",
+      marginLeft: 10,
+      color: "white"
+    },
+    value: {
+      textAlign: "right", // 🔹 Alinea los valores a la derecha
+      fontSize: 16,
+      fontWeight: "bold",
+      color: "white"
+    },
+    tableText: {
+      fontSize: 14,
+      fontWeight: "bold",
+      textAlign: "center",
+      marginVertical: 5,
+      color: "white"
+    },
+  });
+  
+  
+  
 export default CalculateProfitabilityPosition;

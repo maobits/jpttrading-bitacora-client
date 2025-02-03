@@ -6,6 +6,7 @@ import SnackHistoricalSymbol from "./SnackHistoricalSymbol";
 import SnackPartialAdd from "./SnackPartialAdd";
 import SnackProfitabilityPosition from "./SnackProfitabilityPosition";
 import YFinanceService from "@/hooks/recipes/YFinanceService";
+import CalculateProfitabilityPosition from "@/recipes/calculators/CalculateProfitabilityPosition";
 
 const { width: screenWidth } = Dimensions.get("window");
 
@@ -307,18 +308,10 @@ const SnackPositionTable: React.FC<SnackPositionTableProps> = ({
                   </DataTable.Cell>
                   <DataTable.Cell style={styles.cell}>
                     <Text style={[styles.numberText, { color: colors.text }]}>
-                      <SnackProfitabilityPosition
-                        position={{
-                          PriceEntry: position.PriceEntry,
-                          ActiveAllocation: position.ActiveAllocation,
-                          currentPrice: isNaN(
-                            Number(currentPrices[position.Symbol])
-                          )
-                            ? 0
-                            : Number(currentPrices[position.Symbol]), // ← Usa el estado correcto
-                        }}
-                        viewMode={viewMode}
-                      />
+                      
+          {/* Agregar el componente de rentabilidad después de la fecha de operación */}
+          
+            <CalculateProfitabilityPosition trade={position} viewMode={viewMode}/>
                     </Text>
                   </DataTable.Cell>
                   <DataTable.Cell style={styles.cell}>

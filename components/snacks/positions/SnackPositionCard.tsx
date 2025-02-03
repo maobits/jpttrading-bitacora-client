@@ -298,9 +298,9 @@ const SnackPositionCard = ({ position, viewMode, onUpdate }) => {
           </View>
 
           {/* Agregar el componente de rentabilidad después de la fecha de operación */}
-          <View style={styles.row}>
-            <CalculateProfitabilityPosition trade={position} />
-          </View>
+          
+            <CalculateProfitabilityPosition trade={position} viewMode={viewMode}/>
+        
 
           <View style={styles.row}>
             {position.State ? (
