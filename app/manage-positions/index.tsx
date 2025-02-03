@@ -5,6 +5,7 @@ import {
   FlatList,
   ActivityIndicator,
   Modal,
+  TouchableOpacity,
 } from "react-native";
 import {
   Text,
@@ -19,6 +20,9 @@ import PositionsService from "@/hooks/recipes/PositionService";
 import SnackPositionCard from "@/components/snacks/positions/SnackPositionCard";
 import SnackPositionTable from "@/components/snacks/positions/SnackPositionTable";
 import SnackNewPosition from "@/components/snacks/positions/SnackNewPosition";
+import { useAuth } from "@/hooks/recipes/authService"; // Servicio de autenticación
+import { MaterialIcons } from "@expo/vector-icons"; // ✅ Importar el icono de MaterialIcons
+import CalculatePortfolioProfitability from "@/recipes/calculators/CalculatePortfolioProfitability";
 
 // Define the Position type
 interface Position {
@@ -42,6 +46,7 @@ export default function ManagePositions() {
   const [viewMode, setViewMode] = useState<"card" | "table">("card");
   const [modalVisible, setModalVisible] = useState(false);
   const [showClosed, setShowClosed] = useState(false);
+  const { user } = useAuth(); // Obtiene el usuario autenticado
 
   const loadPositions = async () => {
     try {
@@ -63,7 +68,6 @@ export default function ManagePositions() {
     setLoading(true); // Mostrar loader mientras se cargan los datos
     loadPositions();
   }, [showClosed]); // Se ejecutará cuando `showClosed` cambie
-  
 
   const handleNewPosition = async (newPosition: Position) => {
     setPositions((prevPositions) => [newPosition, ...prevPositions]);
@@ -87,55 +91,64 @@ export default function ManagePositions() {
         style={[styles.container, { backgroundColor: colors.background_white }]}
       >
         <View style={styles.header}>
-          <Text
-            style={[
-              styles.title,
-              {
-                fontFamily: fonts.Montserrat.bold,
-                fontSize: fontSizes.extraLarge,
-              },
-            ]}
-          >
-            Gestor de Posiciones
-          </Text>
-          <View style={styles.switchContainer}>
-  <View style={styles.switchGroup}>
-    <Text style={styles.switchLabel}>Estado:</Text>
-    <Switch
-  value={!showClosed} // Invertimos la lógica
-  onValueChange={() => setShowClosed((prev) => !prev)}
-  color={colors.primary}
-  style={styles.smallSwitch}
-/>
-<Text style={styles.switchText}>{!showClosed ? "Abiertas" : "Cerradas"}</Text>
-  </View>
+ 
 
-  <View style={styles.switchGroup}>
-    <Text style={styles.switchLabel}>Vista:</Text>
-    <Switch
-      value={viewMode === "table"}
-      onValueChange={() => setViewMode((prev) => (prev === "card" ? "table" : "card"))}
-      color={colors.primary}
-      style={styles.smallSwitch}
-    />
-    <Text style={styles.switchText}>{viewMode === "card" ? "Tarjetas" : "Tabla"}</Text>
+  {/* 📌 Aquí agregamos la rentabilidad del portafolio debajo del título */}
+  <CalculatePortfolioProfitability positions={positions} viewMode={viewMode} />
+
+  <View style={styles.switchContainer}>
+    <View style={styles.switchGroup}>
+      <Text style={styles.switchLabel}>Estado:</Text>
+      <Switch
+        value={!showClosed}
+        onValueChange={() => setShowClosed((prev) => !prev)}
+        color={colors.primary}
+        style={styles.smallSwitch}
+      />
+      <Text style={styles.switchText}>{!showClosed ? "Abiertas" : "Cerradas"}</Text>
+    </View>
+
+    <View style={styles.switchGroup}>
+      <Text style={styles.switchLabel}>Vista:</Text>
+      <Switch
+        value={viewMode === "table"}
+        onValueChange={() => setViewMode((prev) => (prev === "card" ? "table" : "card"))}
+        color={colors.primary}
+        style={styles.smallSwitch}
+      />
+      <Text style={styles.switchText}>{viewMode === "card" ? "Tarjetas" : "Tabla"}</Text>
+    </View>
   </View>
 </View>
 
-        </View>
-
         {viewMode === "card" ? (
-  <FlatList
-    data={positions}
-    renderItem={({ item }) => (
-      <SnackPositionCard position={item} viewMode={viewMode} />
-    )}
-    keyExtractor={(item) => item.id.toString()}
-    contentContainerStyle={styles.list}
-  />
-) : (
-  <SnackPositionTable positions={positions} viewMode={viewMode} />
-)}
+          <FlatList
+            data={positions}
+            renderItem={({ item }) => (
+              <SnackPositionCard
+                position={item}
+                viewMode={viewMode}
+                onUpdate={loadPositions}
+              />
+            )}
+            keyExtractor={(item) => item.id.toString()}
+            contentContainerStyle={styles.list}
+          />
+        ) : (
+          <SnackPositionTable
+            positions={positions}
+            viewMode={viewMode}
+            onUpdate={loadPositions}
+          />
+        )}
+        {user && (
+          <TouchableOpacity
+            style={styles.smallButton}
+            onPress={() => setModalVisible(true)}
+          >
+            <MaterialIcons name="add-circle" size={40} color={colors.primary} />
+          </TouchableOpacity>
+        )}
 
         {/* Modal para nueva posición */}
         <Modal
@@ -203,5 +216,17 @@ const styles = StyleSheet.create({
   },
   smallSwitch: {
     transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }], // Hace el switch más pequeño
+  },
+  smallButton: {
+    position: "absolute",
+    bottom: 20,
+    right: 20,
+    borderRadius: 50,
+    backgroundColor: "transparent", // Sin fondo
+    padding: 5, // Espaciado alrededor del icono
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
   },
 });

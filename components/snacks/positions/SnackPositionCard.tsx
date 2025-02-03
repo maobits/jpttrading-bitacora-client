@@ -14,6 +14,8 @@ import YFinanceService from "@/hooks/recipes/YFinanceService";
 import SnackHistoricalSymbol from "./SnackHistoricalSymbol";
 import SnackPartialAdd from "./SnackPartialAdd"; // Asegúrate de que este componente esté importado correctamente
 import CalculateProfitabilityPosition from "@/recipes/calculators/CalculateProfitabilityPosition";
+import { useAuth } from "@/hooks/recipes/authService"; // ✅ Importar la autenticación
+
 
 // Helper para formatear valores en dólares americanos
 const formatCurrency = (value) => {
@@ -33,6 +35,7 @@ const SnackPositionCard = ({ position, viewMode, onUpdate }) => {
   const [activeAllocation, setActiveAllocation] = useState("No disponible");
   const [priceHistory, setPriceHistory] = useState([]);
   const [activeAllocationHistory, setActiveAllocationHistory] = useState([]);
+  const { user } = useAuth(); // ✅ Verifica si hay usuario autenticado
 
   const isBuy = position.TradeDirection === "Buy";
 
@@ -172,17 +175,7 @@ const SnackPositionCard = ({ position, viewMode, onUpdate }) => {
           }}
           right={(props) => (
             <View style={styles.rightContainer}>
-              <Badge
-                {...props}
-                size={30}
-                style={{
-                  backgroundColor: isBuy ? colors.primary : colors.secondary,
-                  color: colors.text_black,
-                  alignSelf: "center",
-                }}
-              >
-                {isBuy ? "COMPRAR" : "VENDER"}
-              </Badge>
+             
               <View style={styles.historyContainer}>
                 <MaterialIcons
                   name="calendar-today"
@@ -203,26 +196,21 @@ const SnackPositionCard = ({ position, viewMode, onUpdate }) => {
                   Historial
                 </Button>
                 {/* Botón Plus */}
-                <TouchableOpacity
-                  style={[
-                    styles.plusButton,
-                    { backgroundColor: colors.primary },
-                  ]}
-                  onPress={() => {
-                    console.log(
-                      "Position ID al abrir SnackPartialAdd:",
-                      position.id
-                    ); // Log aquí
-
-                    setPlusModalVisible(true);
-                  }} // Abre el modal del plus
-                >
-                  <MaterialIcons
-                    name="add"
-                    size={20}
-                    color={colors.text_black}
-                  />
-                </TouchableOpacity>
+                {user && (
+                  <TouchableOpacity
+                    style={[
+                      styles.plusButton,
+                      { backgroundColor: colors.primary },
+                    ]}
+                    onPress={() => setPlusModalVisible(true)}
+                  >
+                    <MaterialIcons
+                      name="add"
+                      size={20}
+                      color={colors.text_black}
+                    />
+                  </TouchableOpacity>
+                )}
               </View>
             </View>
           )}
@@ -298,9 +286,11 @@ const SnackPositionCard = ({ position, viewMode, onUpdate }) => {
           </View>
 
           {/* Agregar el componente de rentabilidad después de la fecha de operación */}
-          
-            <CalculateProfitabilityPosition trade={position} viewMode={viewMode}/>
-        
+
+          <CalculateProfitabilityPosition
+            trade={position}
+            viewMode={viewMode}
+          />
 
           <View style={styles.row}>
             {position.State ? (
@@ -312,15 +302,21 @@ const SnackPositionCard = ({ position, viewMode, onUpdate }) => {
             ) : (
               <MaterialIcons name="lock" size={20} color={colors.secondary} />
             )}
-            <Text style={[styles.label, { color: colors.text }]}>Estado:</Text>
-            <Text
-              style={[
-                styles.value,
-                { color: position.State ? "green" : colors.secondary },
-              ]}
-            >
-              {position.State ? "Abierta" : "Cerrada"}
-            </Text>
+            <View
+  style={{
+    backgroundColor: isBuy ? colors.primary : colors.secondary,
+    borderRadius: 5, // Bordes redondeados
+    paddingVertical: 2,
+    paddingHorizontal: 8, // Ajuste interno para que no se vea pegado
+    marginLeft: 8, // Espaciado a la izquierda
+  }}
+>
+  <Text style={[styles.label, { color: colors.text_black }]}>
+    {isBuy ? "COMPRA" : "VENTA"}
+  </Text>
+</View>
+
+            
           </View>
         </Card.Content>
       </Card>

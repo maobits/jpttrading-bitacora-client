@@ -7,6 +7,7 @@ import SnackPartialAdd from "./SnackPartialAdd";
 import SnackProfitabilityPosition from "./SnackProfitabilityPosition";
 import YFinanceService from "@/hooks/recipes/YFinanceService";
 import CalculateProfitabilityPosition from "@/recipes/calculators/CalculateProfitabilityPosition";
+import { useAuth } from "@/hooks/recipes/authService"; // ✅ Importar la autenticación
 
 const { width: screenWidth } = Dimensions.get("window");
 
@@ -48,6 +49,7 @@ const SnackPositionTable: React.FC<SnackPositionTableProps> = ({
   const [currentPrices, setCurrentPrices] = useState<{
     [symbol: string]: number;
   }>({});
+  const { user } = useAuth(); // ✅ Verifica si hay usuario autenticado
 
   const fetchCurrentPrice = async (symbol: string) => {
     try {
@@ -308,10 +310,12 @@ const SnackPositionTable: React.FC<SnackPositionTableProps> = ({
                   </DataTable.Cell>
                   <DataTable.Cell style={styles.cell}>
                     <Text style={[styles.numberText, { color: colors.text }]}>
-                      
-          {/* Agregar el componente de rentabilidad después de la fecha de operación */}
-          
-            <CalculateProfitabilityPosition trade={position} viewMode={viewMode}/>
+                      {/* Agregar el componente de rentabilidad después de la fecha de operación */}
+
+                      <CalculateProfitabilityPosition
+                        trade={position}
+                        viewMode={viewMode}
+                      />
                     </Text>
                   </DataTable.Cell>
                   <DataTable.Cell style={styles.cell}>
@@ -328,12 +332,14 @@ const SnackPositionTable: React.FC<SnackPositionTableProps> = ({
                       >
                         Historial
                       </Button>
-                      <IconButton
-                        icon="plus"
-                        size={20}
-                        color={colors.primary}
-                        onPress={() => openPlusModal(position)}
-                      />
+                      {user && (
+                        <IconButton
+                          icon="plus"
+                          size={20}
+                          color={colors.primary}
+                          onPress={() => openPlusModal(position)}
+                        />
+                      )}
                     </View>
                   </DataTable.Cell>
                 </DataTable.Row>
@@ -395,17 +401,19 @@ const SnackPositionTable: React.FC<SnackPositionTableProps> = ({
         >
           {selectedPosition && (
             <SnackPartialAdd
-            positionId={selectedPosition.Symbol}
-            onClose={() => {
-              console.log("📌 Cierre de modal y recarga de posiciones"); // 🔹 Log de verificación
-              setPlusModalVisible(false);
-              if (onUpdate) {
-                onUpdate(); // ✅ Llama `onUpdate` solo si está definido
-              } else {
-                console.warn("⚠️ onUpdate no está definido en SnackPositionCard");
-              }
-            }}
-          />
+              positionId={selectedPosition.Symbol}
+              onClose={() => {
+                console.log("📌 Cierre de modal y recarga de posiciones"); // 🔹 Log de verificación
+                setPlusModalVisible(false);
+                if (onUpdate) {
+                  onUpdate(); // ✅ Llama `onUpdate` solo si está definido
+                } else {
+                  console.warn(
+                    "⚠️ onUpdate no está definido en SnackPositionCard"
+                  );
+                }
+              }}
+            />
           )}
         </ScrollView>
       </Modal>
