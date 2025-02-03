@@ -93,12 +93,22 @@ export default function HomeScreen() {
       {viewMode === "card" ? (
         <FlatList
           data={positions}
-          renderItem={({ item }) => <SnackPositionCard position={item} />}
+          renderItem={({ item }) => (
+            <SnackPositionCard
+              position={item}
+              viewMode={viewMode}
+              onUpdate={loadPositions}
+            />
+          )}
           keyExtractor={(item) => item.id.toString()}
           contentContainerStyle={styles.list}
         />
       ) : (
-        <SnackPositionTable positions={positions} />
+        <SnackPositionTable
+          positions={positions}
+          viewMode={viewMode}
+          onUpdate={loadPositions}
+        />
       )}
     </View>
   );

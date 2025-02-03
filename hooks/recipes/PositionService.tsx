@@ -37,7 +37,7 @@ const getGeneralToken = (): string => {
 };
 
 const PositionsService = {
-  // Obtener todas las posiciones
+  // Obtener todas las posiciones abiertas.
   getAllPositions: async (): Promise<any> => {
     try {
       console.log(
@@ -46,6 +46,32 @@ const PositionsService = {
 
       const { ip, port } = connectionService.getServerConfig();
       apiClient.defaults.baseURL = `http://${ip}:${port}/api/positions`;
+
+      const token = getGeneralToken();
+
+      const response = await apiClient.get("/", {
+        headers: {
+          "x-api-key": token, // Usar x-api-key en lugar de Authorization
+        },
+      });
+
+      console.log("✅ Posiciones obtenidas exitosamente:", response.data);
+      return response.data;
+    } catch (error) {
+      console.error("❌ Error al obtener posiciones:", error);
+      throw error;
+    }
+  },
+
+   // Obtener todas las posiciones cerradas.
+   getAllClosedPositions: async (): Promise<any> => {
+    try {
+      console.log(
+        "🚀 Iniciando solicitud para obtener todas las posiciones..."
+      );
+
+      const { ip, port } = connectionService.getServerConfig();
+      apiClient.defaults.baseURL = `http://${ip}:${port}/api/positions/closed-positions`;
 
       const token = getGeneralToken();
 

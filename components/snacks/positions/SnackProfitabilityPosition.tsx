@@ -30,26 +30,29 @@ const SnackProfitabilityPosition = ({ position }) => {
     <ProfitabilityCalculatorOpenPosition
     entries={[
       { id: 1, price: "10", date: "2025-01-31T04:46:01.172Z" },
-      { id: 2, price: "12", type: "add", date: "2025-01-31T04:46:17.724Z" },
-      { id: 3, price: "15", type: "add", date: "2025-01-31T04:46:58.489Z" },
-      { id: 4, price: "16", type: "decrease", date: "2025-01-31T04:46:58.489Z" },
-      { id: 4, price: "15", type: "decrease", date: "2025-01-31T04:46:58.489Z" }      
+      { id: 2, price: "12", type:"add", date: "2025-01-31T04:46:01.172Z" },
+      { id: 3, price: "15", type:"add", date: "2025-01-31T04:46:01.172Z" },
+      { id: 4, price: "16", type:"decrease", date: "2025-01-31T04:46:01.172Z" },
+      { id: 5, price: "14", type:"close", date: "2025-01-31T04:46:01.172Z" },
+
     ]}
     allocations={[
       { id: 1, activeAllocation: "100", date: "2025-01-31T04:46:01.172Z" },
-      { id: 2, activeAllocation: "20", type: "add", date: "2025-01-31T04:46:17.724Z" },
-      { id: 3, activeAllocation: "20", type: "add", date: "2025-01-31T04:46:58.490Z" },
-      { id: 4, activeAllocation: "60", type: "decrease", date: "2025-01-31T04:46:58.490Z" },
-      { id: 4, activeAllocation: "100", type: "decrease", date: "2025-01-31T04:46:58.490Z" }
+      { id: 2, activeAllocation: "20", type:"add", date: "2025-01-31T04:46:01.172Z" },
+      { id: 3, activeAllocation: "20", type:"add", date: "2025-01-31T04:46:01.172Z" },
+      { id: 4, activeAllocation: "60", type:"decrease", date: "2025-01-31T04:46:01.172Z" },
+      { id: 5, activeAllocation: "100", type:"close", date: "2025-01-31T04:46:01.172Z" },
+
 
     ]}
-    totalAllocation={1.44}
-    previousAccumulated={1.2}
-    currentEntryPrice={16}
+    totalAllocation={0}
+    previousAccumulated={57.6}
+    currentEntryPrice={14}
     calculatedAveragePrice={11.11111111111111}
-    previousPrice={10.333333333333334}
-    currentPrice={15}
+    previousPrice={16}
+    currentPrice={41.92}
     direction="Buy"
+    viewMode="card"
 />
 
   

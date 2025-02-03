@@ -1,9 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { ScrollView, View, StyleSheet, Modal, Dimensions } from "react-native";
 import { Text, Button, DataTable, IconButton } from "react-native-paper";
 import { useTheme } from "@/hooks/useThemeProvider";
 import SnackHistoricalSymbol from "./SnackHistoricalSymbol";
 import SnackPartialAdd from "./SnackPartialAdd";
+import SnackProfitabilityPosition from "./SnackProfitabilityPosition";
+import YFinanceService from "@/hooks/recipes/YFinanceService";
 
 const { width: screenWidth } = Dimensions.get("window");
 
@@ -27,16 +29,44 @@ interface SnackPositionTableProps {
     TradeDate: string;
     State: boolean;
   }[];
+  viewMode?: "card" | "table"; // Agregamos la propiedad opcional
+  onUpdate: () => void; // 🔹 Aseguramos que se espera esta prop
 }
 
 const SnackPositionTable: React.FC<SnackPositionTableProps> = ({
   positions,
+  viewMode,
+  onUpdate, // 🔹 Recibimos la función aquí
 }) => {
   const { colors } = useTheme();
   const [modalVisible, setModalVisible] = useState(false);
   const [plusModalVisible, setPlusModalVisible] = useState(false);
   const [selectedSymbol, setSelectedSymbol] = useState<string | null>(null);
   const [selectedPosition, setSelectedPosition] = useState<any>(null);
+  const [currentPrice, setCurrentPrice] = useState("Cargando...");
+  const [currentPrices, setCurrentPrices] = useState<{
+    [symbol: string]: number;
+  }>({});
+
+  const fetchCurrentPrice = async (symbol: string) => {
+    try {
+      const data = await YFinanceService.getQuote(symbol);
+      const price = typeof data === "string" ? NaN : data.price;
+
+      setCurrentPrices((prevPrices) => ({
+        ...prevPrices,
+        [symbol]: isNaN(price) ? 0 : price, // Si el precio es NaN, establecerlo en 0
+      }));
+
+      console.log(`Precio de ${symbol}:`, price);
+    } catch (error) {
+      console.error(`Error al obtener el precio para ${symbol}:`, error);
+      setCurrentPrices((prevPrices) => ({
+        ...prevPrices,
+        [symbol]: 0, // Valor por defecto si hay un error
+      }));
+    }
+  };
 
   const parseDatabaseValues = (
     priceEntry: string,
@@ -136,6 +166,12 @@ const SnackPositionTable: React.FC<SnackPositionTableProps> = ({
     setPlusModalVisible(false);
   };
 
+  useEffect(() => {
+    positions.forEach((position) => {
+      fetchCurrentPrice(position.Symbol);
+    });
+  }, [positions]); // Se ejecuta cuando `positions` cambia
+
   return (
     <>
       <ScrollView
@@ -173,6 +209,7 @@ const SnackPositionTable: React.FC<SnackPositionTableProps> = ({
                 "Símbolo",
                 "Entrada",
                 "Promedio",
+                "P. Actual",
                 "Stop Loss",
                 "Take Profit 1",
                 "Take Profit 2",
@@ -235,6 +272,11 @@ const SnackPositionTable: React.FC<SnackPositionTableProps> = ({
                   </DataTable.Cell>
                   <DataTable.Cell style={styles.cell}>
                     <Text style={[styles.numberText, { color: colors.text }]}>
+                      {formatCurrency(currentPrices[position.Symbol] || 0)}
+                    </Text>
+                  </DataTable.Cell>
+                  <DataTable.Cell style={styles.cell}>
+                    <Text style={[styles.numberText, { color: colors.text }]}>
                       {formatCurrency(parseFloat(position.StopLoss))}
                     </Text>
                   </DataTable.Cell>
@@ -265,7 +307,18 @@ const SnackPositionTable: React.FC<SnackPositionTableProps> = ({
                   </DataTable.Cell>
                   <DataTable.Cell style={styles.cell}>
                     <Text style={[styles.numberText, { color: colors.text }]}>
-                      {activeAllocationPercent}
+                      <SnackProfitabilityPosition
+                        position={{
+                          PriceEntry: position.PriceEntry,
+                          ActiveAllocation: position.ActiveAllocation,
+                          currentPrice: isNaN(
+                            Number(currentPrices[position.Symbol])
+                          )
+                            ? 0
+                            : Number(currentPrices[position.Symbol]), // ← Usa el estado correcto
+                        }}
+                        viewMode={viewMode}
+                      />
                     </Text>
                   </DataTable.Cell>
                   <DataTable.Cell style={styles.cell}>
@@ -349,9 +402,17 @@ const SnackPositionTable: React.FC<SnackPositionTableProps> = ({
         >
           {selectedPosition && (
             <SnackPartialAdd
-              positionId={selectedPosition.Symbol}
-              onClose={closePlusModal}
-            />
+            positionId={selectedPosition.Symbol}
+            onClose={() => {
+              console.log("📌 Cierre de modal y recarga de posiciones"); // 🔹 Log de verificación
+              setPlusModalVisible(false);
+              if (onUpdate) {
+                onUpdate(); // ✅ Llama `onUpdate` solo si está definido
+              } else {
+                console.warn("⚠️ onUpdate no está definido en SnackPositionCard");
+              }
+            }}
+          />
           )}
         </ScrollView>
       </Modal>

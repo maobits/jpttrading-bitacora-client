@@ -161,23 +161,31 @@ const SnackPartialAdd = ({ positionId, onClose }) => {
           style={[styles.divider, { backgroundColor: colors.primary }]}
         />
 
-        <RadioButton.Group
-          onValueChange={(value) => setType(value)}
-          value={type}
-        >
-          <View style={styles.radioButtonContainer}>
-            <RadioButton value="add" color={colors.primary} />
-            <Text style={{ color: colors.black }}>Adición parcial</Text>
-          </View>
-          <View style={styles.radioButtonContainer}>
-            <RadioButton value="decrease" color={colors.primary} />
-            <Text style={{ color: colors.black }}>Toma parcial</Text>
-          </View>
-          <View style={styles.radioButtonContainer}>
+<RadioButton.Group
+  onValueChange={(value) => {
+    setType(value);
+    if (value === "close") {
+      setActiveAllocation("100"); // 🔹 Fija asignación en 100 si es cierre
+    }
+  }}
+  value={type}
+>
+  <View style={styles.radioButtonContainer}>
+    <RadioButton value="add" color={colors.primary} />
+    <Text style={{ color: colors.black }}>Adición parcial</Text>
+  </View>
+
+  <View style={styles.radioButtonContainer}>
     <RadioButton value="decrease" color={colors.primary} />
+    <Text style={{ color: colors.black }}>Toma parcial</Text>
+  </View>
+
+  <View style={styles.radioButtonContainer}>
+    <RadioButton value="close" color={colors.primary} /> {/* 🔹 Cambio aquí */}
     <Text style={{ color: colors.black }}>Cerrar posición</Text>
   </View>
-        </RadioButton.Group>
+</RadioButton.Group>
+
 
         
 

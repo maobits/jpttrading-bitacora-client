@@ -13,7 +13,7 @@ import YFinanceService from "@/hooks/recipes/YFinanceService";
 
 import SnackHistoricalSymbol from "./SnackHistoricalSymbol";
 import SnackPartialAdd from "./SnackPartialAdd"; // Asegúrate de que este componente esté importado correctamente
-import SnackProfitabilityPosition from "./SnackProfitabilityPosition";
+import CalculateProfitabilityPosition from "@/recipes/calculators/CalculateProfitabilityPosition";
 
 // Helper para formatear valores en dólares americanos
 const formatCurrency = (value) => {
@@ -23,7 +23,7 @@ const formatCurrency = (value) => {
   }).format(value);
 };
 
-const SnackPositionCard = ({ position }) => {
+const SnackPositionCard = ({ position, viewMode, onUpdate }) => {
   const { colors, fonts } = useTheme();
   const [currentPrice, setCurrentPrice] = useState("Cargando...");
   const [modalVisible, setModalVisible] = useState(false); // Para el historial
@@ -296,16 +296,11 @@ const SnackPositionCard = ({ position }) => {
               {position.TradeDate}
             </Text>
           </View>
-          
-          <SnackProfitabilityPosition
-            position={{
-              PriceEntry: position.PriceEntry,
-              ActiveAllocation: position.ActiveAllocation,
-              currentPrice: isNaN(Number(currentPrice))
-                ? 0
-                : Number(currentPrice), // Convertir a número válido
-            }}
-          />
+
+          {/* Agregar el componente de rentabilidad después de la fecha de operación */}
+          <View style={styles.row}>
+            <CalculateProfitabilityPosition trade={position} />
+          </View>
 
           <View style={styles.row}>
             {position.State ? (
@@ -378,7 +373,17 @@ const SnackPositionCard = ({ position }) => {
         >
           <SnackPartialAdd
             positionId={position.id}
-            onClose={() => setPlusModalVisible(false)} // Pasa correctamente la función onClose
+            onClose={() => {
+              console.log("📌 Cierre de modal y recarga de posiciones"); // 🔹 Log de verificación
+              setPlusModalVisible(false);
+              if (onUpdate) {
+                onUpdate(); // ✅ Llama `onUpdate` solo si está definido
+              } else {
+                console.warn(
+                  "⚠️ onUpdate no está definido en SnackPositionCard"
+                );
+              }
+            }}
           />
           <Button
             mode="contained"

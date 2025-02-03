@@ -41,11 +41,15 @@ export default function ManagePositions() {
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<"card" | "table">("card");
   const [modalVisible, setModalVisible] = useState(false);
+  const [showClosed, setShowClosed] = useState(false);
 
   const loadPositions = async () => {
     try {
-      console.log("Loading positions...");
-      const data = await PositionsService.getAllPositions();
+      console.log(`Loading ${showClosed ? "closed" : "open"} positions...`);
+      const data = showClosed
+        ? await PositionsService.getAllClosedPositions()
+        : await PositionsService.getAllPositions();
+
       setPositions(data.results);
       console.log("Positions loaded:", data.results);
     } catch (error) {
@@ -56,8 +60,10 @@ export default function ManagePositions() {
   };
 
   useEffect(() => {
+    setLoading(true); // Mostrar loader mientras se cargan los datos
     loadPositions();
-  }, []);
+  }, [showClosed]); // Se ejecutará cuando `showClosed` cambie
+  
 
   const handleNewPosition = async (newPosition: Position) => {
     setPositions((prevPositions) => [newPosition, ...prevPositions]);
@@ -93,44 +99,43 @@ export default function ManagePositions() {
             Gestor de Posiciones
           </Text>
           <View style={styles.switchContainer}>
-            <Text
-              style={[
-                styles.switchLabel,
-                { fontFamily: fonts.Montserrat.bold, color: colors.text_black },
-              ]}
-            >
-              {viewMode === "card" ? "Vista tarjetas" : "Vista tabla"}
-            </Text>
-            <Switch
-              value={viewMode === "table"}
-              onValueChange={() =>
-                setViewMode((prev) => (prev === "card" ? "table" : "card"))
-              }
-              color={colors.primary}
-            />
-            <IconButton
-              icon="plus"
-              size={28}
-              onPress={() => setModalVisible(true)}
-              style={[
-                styles.fab,
-                { backgroundColor: colors.primary, marginLeft: 10 },
-              ]}
-              iconColor={colors.text_black}
-            />
-          </View>
+  <View style={styles.switchGroup}>
+    <Text style={styles.switchLabel}>Estado:</Text>
+    <Switch
+  value={!showClosed} // Invertimos la lógica
+  onValueChange={() => setShowClosed((prev) => !prev)}
+  color={colors.primary}
+  style={styles.smallSwitch}
+/>
+<Text style={styles.switchText}>{!showClosed ? "Abiertas" : "Cerradas"}</Text>
+  </View>
+
+  <View style={styles.switchGroup}>
+    <Text style={styles.switchLabel}>Vista:</Text>
+    <Switch
+      value={viewMode === "table"}
+      onValueChange={() => setViewMode((prev) => (prev === "card" ? "table" : "card"))}
+      color={colors.primary}
+      style={styles.smallSwitch}
+    />
+    <Text style={styles.switchText}>{viewMode === "card" ? "Tarjetas" : "Tabla"}</Text>
+  </View>
+</View>
+
         </View>
 
         {viewMode === "card" ? (
-          <FlatList
-            data={positions}
-            renderItem={({ item }) => <SnackPositionCard position={item} />}
-            keyExtractor={(item) => item.id.toString()}
-            contentContainerStyle={styles.list}
-          />
-        ) : (
-          <SnackPositionTable positions={positions} />
-        )}
+  <FlatList
+    data={positions}
+    renderItem={({ item }) => (
+      <SnackPositionCard position={item} viewMode={viewMode} />
+    )}
+    keyExtractor={(item) => item.id.toString()}
+    contentContainerStyle={styles.list}
+  />
+) : (
+  <SnackPositionTable positions={positions} viewMode={viewMode} />
+)}
 
         {/* Modal para nueva posición */}
         <Modal
@@ -162,15 +167,6 @@ const styles = StyleSheet.create({
   title: {
     textAlign: "center",
   },
-  switchContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  switchLabel: {
-    marginRight: 8,
-    fontSize: 16,
-    fontFamily: "Raleway-Regular",
-  },
   list: {
     paddingBottom: 20,
   },
@@ -181,5 +177,31 @@ const styles = StyleSheet.create({
   },
   fab: {
     borderRadius: 50,
+  },
+
+  switchContainer: {
+    flexDirection: "column", // Organiza los switches en vertical
+    alignItems: "center", // Centra los elementos
+    marginBottom: 10, // Espacio debajo de los switches
+  },
+  switchGroup: {
+    flexDirection: "row", // Cada grupo (estado/vista) sigue en horizontal
+    alignItems: "center",
+    marginBottom: 5, // Espaciado entre grupos
+  },
+  switchLabel: {
+    fontSize: 14, // Texto más pequeño
+    fontFamily: "Montserrat-Bold",
+    color: "#333",
+    marginRight: 5, // Espaciado entre el texto y el switch
+  },
+  switchText: {
+    fontSize: 12, // Texto más pequeño para el estado
+    fontFamily: "Montserrat-Regular",
+    color: "#666",
+    marginLeft: 5, // Espaciado entre el switch y el texto
+  },
+  smallSwitch: {
+    transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }], // Hace el switch más pequeño
   },
 });
