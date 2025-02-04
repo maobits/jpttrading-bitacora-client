@@ -50,21 +50,6 @@ const SnackPositionCard = ({ position, viewMode, onUpdate }) => {
   } = PositionProfitabilityCalculator({ position });
 
 
-  useEffect(() => {
-    const fetchProfitability = async () => {
-      try {
-        const result = await calculateProfitability(position);
-        console.log("📊 Resultado de rentabilidad:", result); // 🔍 Ver qué devuelve la función
-        setProfitability(result.profitability ?? "No disponible");
-      } catch (error) {
-        console.error("❌ Error al calcular rentabilidad:", error);
-        setProfitability("Error");
-      }
-    };
-  
-    fetchProfitability();
-  }, [position]);
-  
 
   useEffect(() => {
     const fetchCurrentPrice = async () => {
@@ -94,66 +79,13 @@ const SnackPositionCard = ({ position, viewMode, onUpdate }) => {
             ? parseFloat(priceEntryObject.price).toFixed(2)
             : "No disponible"
         );
-
-        // Filtrar los datos para excluir elementos con type === 'decrease'
-        const filteredPriceData = priceData.filter(
-          (item) => item.type !== "decrease"
-        );
-        const filteredAllocationData = allocationData.filter(
-          (item) => item.type !== "decrease"
-        );
-
-        // Calcular el acumulado total actual y previo de forma dinámica
-        const totalAllocation = filteredAllocationData.reduce(
-          (acc, alloc, index) => {
-            const increment = parseFloat(alloc.activeAllocation) / 100;
-            return index === 0 ? increment : acc * (1 + increment);
-          },
-          1
-        ); // Acumulado actual
-
-        // Calcular el rendimiento de la posición.
-        const result = calculateProfitability(position);
-
-
-        const previousAccumulated = filteredAllocationData
-          .slice(0, -1)
-          .reduce((acc, alloc, index) => {
-            const increment = parseFloat(alloc.activeAllocation) / 100;
-            return index === 0 ? increment : acc * (1 + increment);
-          }, 1); // Acumulado previo
-
-        // Precio promedio previo
-        const previousPrice =
-          filteredPriceData.slice(0, -1).reduce((acc, item, index) => {
-            const alloc = parseFloat(
-              filteredAllocationData[index].activeAllocation
-            );
-            return acc + parseFloat(item.price) * (alloc / 100);
-          }, 0) / previousAccumulated;
-
-        // Precio de entrada actual
-        const currentEntryPrice = parseFloat(
-          filteredPriceData[filteredPriceData.length - 1].price
-        );
-
-        // Calcular el precio promedio dinámico usando la fórmula
-        const calculatedAveragePrice =
-          (previousPrice * previousAccumulated +
-            currentEntryPrice * (totalAllocation - previousAccumulated)) /
-          totalAllocation;
-
-        // Calcular la asignación activa acumulativa
-        setActiveAllocation((totalAllocation * 100).toFixed(2) + "%");
-
-        // Calcular el precio promedio final y redondear a 2 decimales
-        setAveragePrice(calculatedAveragePrice.toFixed(2));
+       
+     
       } catch (error) {
         // Manejo de errores
         console.error("Error al parsear datos:", error);
         setEntryPrice("No disponible");
-        setAveragePrice("No disponible");
-        setActiveAllocation("No disponible");
+       
       }
     };
 
@@ -262,7 +194,7 @@ const SnackPositionCard = ({ position, viewMode, onUpdate }) => {
               Precio Promedio:
             </Text>
             <Text style={[styles.value, { color: colors.text }]}>
-              {"$" + averagePrice}
+              {"$" + weightedAvgPrice.toFixed(2)}
             </Text>
           </View>
           <View style={styles.row}>
