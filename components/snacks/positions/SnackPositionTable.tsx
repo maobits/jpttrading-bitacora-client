@@ -6,7 +6,6 @@ import SnackHistoricalSymbol from "./SnackHistoricalSymbol";
 import SnackPartialAdd from "./SnackPartialAdd";
 import SnackProfitabilityPosition from "./SnackProfitabilityPosition";
 import YFinanceService from "@/hooks/recipes/YFinanceService";
-import CalculateProfitabilityPosition from "@/recipes/calculators/CalculateProfitabilityPosition";
 import { useAuth } from "@/hooks/recipes/authService"; // ✅ Importar la autenticación
 
 const { width: screenWidth } = Dimensions.get("window");
@@ -312,10 +311,7 @@ const SnackPositionTable: React.FC<SnackPositionTableProps> = ({
                     <Text style={[styles.numberText, { color: colors.text }]}>
                       {/* Agregar el componente de rentabilidad después de la fecha de operación */}
 
-                      <CalculateProfitabilityPosition
-                        trade={position}
-                        viewMode={viewMode}
-                      />
+                      
                     </Text>
                   </DataTable.Cell>
                   <DataTable.Cell style={styles.cell}>

@@ -10,11 +10,10 @@ import { Card, Text, Divider, Badge, Button } from "react-native-paper";
 import { useTheme } from "@/hooks/useThemeProvider";
 import { MaterialIcons, MaterialCommunityIcons } from "@expo/vector-icons";
 import YFinanceService from "@/hooks/recipes/YFinanceService";
-
 import SnackHistoricalSymbol from "./SnackHistoricalSymbol";
 import SnackPartialAdd from "./SnackPartialAdd"; // Asegúrate de que este componente esté importado correctamente
-import CalculateProfitabilityPosition from "@/recipes/calculators/CalculateProfitabilityPosition";
 import { useAuth } from "@/hooks/recipes/authService"; // ✅ Importar la autenticación
+import PositionProfitabilityCalculator from "@/recipes/calculators/PositionProfitabilityCalculator";
 
 
 // Helper para formatear valores en dólares americanos
@@ -36,8 +35,36 @@ const SnackPositionCard = ({ position, viewMode, onUpdate }) => {
   const [priceHistory, setPriceHistory] = useState([]);
   const [activeAllocationHistory, setActiveAllocationHistory] = useState([]);
   const { user } = useAuth(); // ✅ Verifica si hay usuario autenticado
+  const [profitability, setProfitability] = useState("Calculando...");
+
 
   const isBuy = position.TradeDirection === "Buy";
+
+  // Obtener datos calculados.
+  const {
+    presentPrice,
+    weightedAvgPrice,
+    activeAssignment,
+    partialProfitability,
+    totalProfitability,
+  } = PositionProfitabilityCalculator({ position });
+
+
+  useEffect(() => {
+    const fetchProfitability = async () => {
+      try {
+        const result = await calculateProfitability(position);
+        console.log("📊 Resultado de rentabilidad:", result); // 🔍 Ver qué devuelve la función
+        setProfitability(result.profitability ?? "No disponible");
+      } catch (error) {
+        console.error("❌ Error al calcular rentabilidad:", error);
+        setProfitability("Error");
+      }
+    };
+  
+    fetchProfitability();
+  }, [position]);
+  
 
   useEffect(() => {
     const fetchCurrentPrice = async () => {
@@ -84,6 +111,10 @@ const SnackPositionCard = ({ position, viewMode, onUpdate }) => {
           },
           1
         ); // Acumulado actual
+
+        // Calcular el rendimiento de la posición.
+        const result = calculateProfitability(position);
+
 
         const previousAccumulated = filteredAllocationData
           .slice(0, -1)
@@ -275,22 +306,30 @@ const SnackPositionCard = ({ position, viewMode, onUpdate }) => {
             </Text>
           </View>
           <Divider style={styles.divider} />
+          
+          {/* Agregar el componente de rentabilidad después de la fecha de operación */}
           <View style={styles.row}>
             <MaterialIcons name="date-range" size={20} color={colors.text} />
             <Text style={[styles.label, { color: colors.text }]}>
-              Fecha de Operación:
+              Retabilidad total
             </Text>
             <Text style={[styles.value, { color: colors.text }]}>
-              {position.TradeDate}
+            {totalProfitability.toFixed(2)}%
             </Text>
           </View>
 
-          {/* Agregar el componente de rentabilidad después de la fecha de operación */}
-
-          <CalculateProfitabilityPosition
-            trade={position}
-            viewMode={viewMode}
-          />
+           {/* Agregar el componente de rentabilidad después de la fecha de operación */}
+           <View style={styles.row}>
+            <MaterialIcons name="date-range" size={20} color={colors.text} />
+            <Text style={[styles.label, { color: colors.text }]}>
+              Asignación activa
+            </Text>
+            <Text style={[styles.value, { color: colors.text }]}>
+            {activeAssignment}%
+           
+            </Text>
+          </View>
+          
 
           <View style={styles.row}>
             {position.State ? (
