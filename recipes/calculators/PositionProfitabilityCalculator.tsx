@@ -19,11 +19,13 @@ const PositionProfitabilityCalculator = ({ position }) => {
         const price = typeof data === "string" ? NaN : data.price;
         setCurrentPrice(isNaN(price) ? 0 : price);
       } catch (error) {
-        console.error(`Error al obtener el precio para ${position.Symbol}:`, error);
+        console.error(
+          `Error al obtener el precio para ${position.Symbol}:`,
+          error
+        );
         setCurrentPrice(0);
       }
     };
-
     fetchCurrentPrice();
   }, [position]);
 
@@ -33,19 +35,20 @@ const PositionProfitabilityCalculator = ({ position }) => {
     try {
       const priceEntries = JSON.parse(position.PriceEntry);
       const allocations = JSON.parse(position.ActiveAllocation);
-      
+
       let totalCost = 0;
       let totalAllocation = 0;
       let previousAllocation = 0;
       let newActiveAllocation = 0;
       let grossProfitPartial = 0;
       let grossProfitTotal = 0;
-      
+      let maxAllocation = 0;
+
       // Calcular precio promedio ponderado
       priceEntries.forEach((entry) => {
         const allocation = allocations.find((a) => a.id === entry.id);
         if (!allocation) return;
-        
+
         const price = parseFloat(entry.price);
         const activeAllocation = parseFloat(allocation.activeAllocation);
         const type = entry.type || "initial";
@@ -54,52 +57,79 @@ const PositionProfitabilityCalculator = ({ position }) => {
           totalAllocation = activeAllocation;
           totalCost = price * activeAllocation;
         } else if (type === "add") {
-          const newAllocation = previousAllocation * 0.2;
+          const newAllocation = previousAllocation * (activeAllocation / 100);
           totalAllocation += newAllocation;
           totalCost += price * newAllocation;
         }
 
         previousAllocation = totalAllocation;
+        maxAllocation = Math.max(maxAllocation, totalAllocation);
       });
 
       const weightedAvg = totalCost / totalAllocation;
       setWeightedAvgPrice(weightedAvg);
-      
-      // Calcular rentabilidad parcial y total
+
+      // Calcular rentabilidad total desde el inicio
+      const factorActive =
+        (totalAllocation / maxAllocation) *
+        (position.TradeDirection === "Buy"
+          ? (presentPrice - weightedAvg) / weightedAvg
+          : (weightedAvg - presentPrice) / weightedAvg);
+      let totalProfit = factorActive;
+
+      // Calcular rentabilidad parcial y total incluyendo tomas parciales
       priceEntries.forEach((entry) => {
         const allocation = allocations.find((a) => a.id === entry.id);
         if (!allocation) return;
-        
+
         const price = parseFloat(entry.price);
         const activeAllocation = parseFloat(allocation.activeAllocation);
         const type = entry.type;
 
         if (type === "decrease") {
-          const decreaseAllocation = previousAllocation * 0.6;
+          const decreaseAllocation =
+            previousAllocation * (activeAllocation / 100);
           newActiveAllocation = previousAllocation - decreaseAllocation;
-          grossProfitPartial += (position.TradeDirection === "Buy" ? (price - weightedAvg) : (weightedAvg - price)) * decreaseAllocation;
+          const partialProfit =
+            position.TradeDirection === "Buy"
+              ? (price - weightedAvg) / weightedAvg
+              : (weightedAvg - price) / weightedAvg;
+          const factorPartial =
+            ((previousAllocation - newActiveAllocation) / maxAllocation) *
+            partialProfit;
+          const factorActivePosition =
+            (newActiveAllocation / maxAllocation) *
+            (position.TradeDirection === "Buy"
+              ? (presentPrice - weightedAvg) / weightedAvg
+              : (weightedAvg - presentPrice) / weightedAvg);
+          grossProfitPartial += factorPartial + factorActivePosition;
         } else if (type === "close") {
           const closeAllocation = newActiveAllocation;
           newActiveAllocation = 0;
-          grossProfitTotal += (position.TradeDirection === "Buy" ? (price - weightedAvg) : (weightedAvg - price)) * closeAllocation;
+          const closeProfit =
+            (position.TradeDirection === "Buy"
+              ? price - weightedAvg
+              : weightedAvg - price) / weightedAvg;
+          grossProfitTotal += closeProfit;
         }
       });
 
-      const totalCostSold = weightedAvg * (totalAllocation - newActiveAllocation);
-      const partialProfit = (grossProfitPartial / totalCostSold) * 100;
-      const totalProfit = ((grossProfitPartial + grossProfitTotal) / totalCostSold) * 100;
-
-      setActiveAssignment(newActiveAllocation);
-      setPartialProfitability(partialProfit);
+      totalProfit += grossProfitPartial;
+      setActiveAssignment(newActiveAllocation || totalAllocation);
+      setPartialProfitability(grossProfitPartial);
       setTotalProfitability(totalProfit);
 
       console.log(`\n[PROFITABILITY REPORT]`);
       console.log(`----------------------------------`);
       console.log(`Símbolo: ${position.Symbol}`);
-      console.log(`Precio Promedio Ponderado: ${weightedAvg.toFixed(2)}`);
-      console.log(`Asignación Activa Actual: ${newActiveAllocation.toFixed(2)}`);
-      console.log(`Rentabilidad Parcial: ${partialProfit.toFixed(2)}%`);
-      console.log(`Rentabilidad Total: ${totalProfit.toFixed(2)}%`);
+      console.log(`Precio Promedio Ponderado: ${weightedAvg}`);
+      console.log(
+        `Asignación Activa Actual: ${
+          newActiveAllocation > 0 ? newActiveAllocation : totalAllocation
+        }`
+      );
+      console.log(`Rentabilidad Parcial: ${grossProfitPartial}`);
+      console.log(`Rentabilidad Total: ${totalProfit}`);
       console.log(`----------------------------------\n`);
     } catch (error) {
       console.error("Error en el cálculo de rentabilidad:", error);

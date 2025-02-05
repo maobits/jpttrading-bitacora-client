@@ -185,7 +185,7 @@ const SnackPositionCard = ({ position, viewMode, onUpdate }) => {
               Precio de Entrada:
             </Text>
             <Text style={[styles.value, { color: colors.text }]}>
-              {formatCurrency(parseFloat(entryPrice || "0"))}
+              {entryPrice}
             </Text>
           </View>
           <View style={styles.row}>
@@ -246,7 +246,7 @@ const SnackPositionCard = ({ position, viewMode, onUpdate }) => {
               Retabilidad total
             </Text>
             <Text style={[styles.value, { color: colors.text }]}>
-            {totalProfitability.toFixed(2)}%
+            {(Math.trunc(totalProfitability * 100) / 100).toFixed(2)}%
             </Text>
           </View>
 
@@ -257,7 +257,7 @@ const SnackPositionCard = ({ position, viewMode, onUpdate }) => {
               Asignación activa
             </Text>
             <Text style={[styles.value, { color: colors.text }]}>
-            {activeAssignment}%
+            {(Math.trunc(activeAssignment * 100) / 100).toFixed(2)}%
            
             </Text>
           </View>
