@@ -113,7 +113,9 @@ const SnackPartialAdd = ({ positionId, onClose }) => {
       };
       
       if (type === "close") {
-        updatedData.State = false;  // 🔹 Cambia el estado de la posición a inactiva
+        updatedData.State = false;  
+        updatedData.SavedPrice = priceEntry;
+        // 🔹 Cambia el estado de la posición a inactiva
       }
       
       await PositionsService.updatePosition(positionId, updatedData);
