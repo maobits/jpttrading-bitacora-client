@@ -220,7 +220,7 @@ const SnackPositionCard = ({ position, viewMode, onUpdate }) => {
             </Text>
             <Text style={[styles.value, { color: colors.text }]}>
               {" "}
-              {AveragePrice !== null ? `${AveragePrice}%` : "¡No disponible!"}
+              {AveragePrice !== null ? `${AveragePrice}` : "¡No disponible!"}
             </Text>
           </View>
           <View style={styles.row}>
@@ -273,10 +273,10 @@ const SnackPositionCard = ({ position, viewMode, onUpdate }) => {
       {position.State
         ? TotalProfitability !== null
           ? `${TotalProfitability}%`
-          : "¡No disponible!"
+          : "Cargando..."
         : totalReturnClosedPosition !== null
           ? `${totalReturnClosedPosition}%`
-          : "¡No disponible!"}
+          : "Cargando..."}
     </Text>
 </View>
 
@@ -289,10 +289,10 @@ const SnackPositionCard = ({ position, viewMode, onUpdate }) => {
       {position.State
         ? activeAssignment !== null
           ? `${activeAssignment}%`
-          : "¡No disponible!"
+          : "Cargando..."
         : "0%"}
     </Text>
-</View>s
+</View>
 
           {/* Agregar el componente de rentabilidad después de la fecha de operación */}
 

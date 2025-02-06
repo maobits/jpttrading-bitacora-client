@@ -342,7 +342,7 @@ const SnackPositionTable: React.FC<SnackPositionTableProps> = ({
     {`RT/ ${profitabilityData[position.Symbol]?.rentabilidadTotal !== "No disponible" 
       ? `${profitabilityData[position.Symbol]?.rentabilidadTotal}%` 
       : "No disponible"}  AA ${profitabilityData[position.Symbol]?.asignacionActiva !== "No disponible" 
-      ? `${profitabilityData[position.Symbol]?.asignacionActiva}%` 
+      ? `${profitabilityData[position.Symbol]?.asignacionActiva}` 
       : "No disponible"}`}
   </Text>
 </DataTable.Cell>

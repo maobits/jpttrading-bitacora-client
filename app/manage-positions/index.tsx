@@ -22,6 +22,7 @@ import SnackPositionTable from "@/components/snacks/positions/SnackPositionTable
 import SnackNewPosition from "@/components/snacks/positions/SnackNewPosition";
 import { useAuth } from "@/hooks/recipes/authService"; // Servicio de autenticación
 import { MaterialIcons } from "@expo/vector-icons"; // ✅ Importar el icono de MaterialIcons
+import { fetchPortfolioProfitability } from "@/recipes/calculators/CalculatePortfolioProfitability";
 
 // Define the Position type
 interface Position {
@@ -41,27 +42,39 @@ interface Position {
 export default function ManagePositions() {
   const { colors, fonts, fontSizes } = useTheme();
   const [positions, setPositions] = useState<Position[]>([]);
+  const [portfolioResult, setPortfolioResult] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<"card" | "table">("card");
   const [modalVisible, setModalVisible] = useState(false);
   const [showClosed, setShowClosed] = useState(false);
   const { user } = useAuth(); // Obtiene el usuario autenticado
 
+   
+
   const loadPositions = async () => {
     try {
-      console.log(`Loading ${showClosed ? "closed" : "open"} positions...`);
-      const data = showClosed
-        ? await PositionsService.getAllClosedPositions()
-        : await PositionsService.getAllPositions();
+        console.log(`Loading ${showClosed ? "closed" : "open"} positions...`);
+        const data = showClosed
+            ? await PositionsService.getAllClosedPositions()
+            : await PositionsService.getAllPositions();
 
-      setPositions(data.results);
-      console.log("Positions loaded:", data.results);
+        setPositions(data.results);
+        console.log("Positions loaded:", data.results);
+
+        // 📌 Llamamos la función para calcular el portafolio
+        const portfolioData = await fetchPortfolioProfitability(data);
+        
+        console.log("✅ Respuesta recibida del cálculo de portafolio:", portfolioData);
+
+        setPortfolioResult(portfolioData); // ✅ Guardar como objeto en el estado
+
     } catch (error) {
-      console.error("Error loading positions:", error);
+        console.error("❌ Error loading positions:", error);
     } finally {
-      setLoading(false);
+        setLoading(false);
     }
-  };
+};
+
 
   useEffect(() => {
     setLoading(true); // Mostrar loader mientras se cargan los datos
@@ -90,34 +103,55 @@ export default function ManagePositions() {
         style={[styles.container, { backgroundColor: colors.background_white }]}
       >
         <View style={styles.header}>
- 
+          <View style={styles.switchContainer}>
+            <View style={styles.switchGroup}>
+              <Text style={styles.switchLabel}>Estado:</Text>
+              <Switch
+                value={!showClosed}
+                onValueChange={() => setShowClosed((prev) => !prev)}
+                color={colors.primary}
+                style={styles.smallSwitch}
+              />
+              <Text style={styles.switchText}>
+                {!showClosed ? "Abiertas" : "Cerradas"}
+              </Text>
+            </View>
 
-  
+            <View style={styles.switchGroup}>
+              <Text style={styles.switchLabel}>Vista:</Text>
+              <Switch
+                value={viewMode === "table"}
+                onValueChange={() =>
+                  setViewMode((prev) => (prev === "card" ? "table" : "card"))
+                }
+                color={colors.primary}
+                style={styles.smallSwitch}
+              />
+              <Text style={styles.switchText}>
+                {viewMode === "card" ? "Tarjetas" : "Tabla"}
+              </Text>
+            </View>
+          </View>
+          {/* 📌 Sección donde mostramos el resultado del cálculo */}
+          <View style={[styles.portfolioResultContainer]}>
+    <Text style={styles.portfolioResultTitle}>
+      📊 Portafolio
+    </Text>
 
-  <View style={styles.switchContainer}>
-    <View style={styles.switchGroup}>
-      <Text style={styles.switchLabel}>Estado:</Text>
-      <Switch
-        value={!showClosed}
-        onValueChange={() => setShowClosed((prev) => !prev)}
-        color={colors.primary}
-        style={styles.smallSwitch}
-      />
-      <Text style={styles.switchText}>{!showClosed ? "Abiertas" : "Cerradas"}</Text>
-    </View>
-
-    <View style={styles.switchGroup}>
-      <Text style={styles.switchLabel}>Vista:</Text>
-      <Switch
-        value={viewMode === "table"}
-        onValueChange={() => setViewMode((prev) => (prev === "card" ? "table" : "card"))}
-        color={colors.primary}
-        style={styles.smallSwitch}
-      />
-      <Text style={styles.switchText}>{viewMode === "card" ? "Tarjetas" : "Tabla"}</Text>
+    <View style={styles.portfolioCard}>
+      <Text style={styles.portfolioResultValue}>
+        {showClosed
+          ? portfolioResult.historial && portfolioResult.historial.length > 0
+            ? `RTC: ${portfolioResult.estadoActual.rentabilidadTotalCerrada}%`
+            : "Sin datos"
+          : portfolioResult.estadoActual && portfolioResult.estadoActual.rentabilidadTotalActiva
+            ? `RTA: ${portfolioResult.estadoActual.rentabilidadTotalActiva}%`
+            : "Sin datos"}
+      </Text>
     </View>
   </View>
-</View>
+
+        </View>
 
         {viewMode === "card" ? (
           <FlatList
@@ -227,4 +261,46 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 4,
   },
+  portfolioResultContainer: {
+    marginTop: 5, // Reducido aún más
+    paddingVertical: 5, // Menos padding
+    paddingHorizontal: 10, // Más compacto en los lados
+    backgroundColor: "#0C0C0C",
+    borderRadius: 8, // Bordes más pequeños
+    alignItems: "center",
+    shadowColor: "#F29F05",
+    shadowOffset: { width: 0, height: 1 }, // Menos sombra
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 2, // Menos sombra en Android
+  },
+  portfolioResultTitle: {
+    fontSize: 14, // Más pequeño
+    fontFamily: "Raleway-Bold",
+    color: "#F2B705",
+    textTransform: "uppercase",
+    letterSpacing: 0.8, // Espaciado mínimo
+    marginBottom: 3, // Menos espacio
+  },
+  portfolioCard: {
+    padding: 8, // Más compacto
+    borderRadius: 6, // Bordes más pequeños
+    backgroundColor: "#F29F05",
+    minWidth: "60%", // Reduce el ancho
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 }, // Menos sombra
+    shadowOpacity: 0.15,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  portfolioResultValue: {
+    fontSize: 16, // Más compacto
+    fontFamily: "Montserrat-Bold",
+    color: "#0C0C0C",
+    textAlign: "center",
+    paddingVertical: 2, // Menos padding
+  },
+  
 });
