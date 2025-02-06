@@ -1,148 +1,60 @@
-import { useState, useEffect } from "react";
-import YFinanceService from "@/hooks/recipes/YFinanceService";
+import config from "@/store/config/calculatorServer.json";
 
-const PositionProfitabilityCalculator = ({ position }) => {
-  const [presentPrice, setCurrentPrice] = useState(0);
-  const [weightedAvgPrice, setWeightedAvgPrice] = useState(0);
-  const [partialProfitability, setPartialProfitability] = useState(0);
-  const [activeAssignment, setActiveAssignment] = useState(0);
-  const [totalProfitability, setTotalProfitability] = useState(0);
+interface PositionData {
+    id: number;
+    order: string;
+    Symbol: string;
+    PriceEntry: string;
+    StopLoss: string;
+    TakeProfit: string;
+    TradeDirection: string;
+    PositionType: string;
+    TakeProfit2: string;
+    ActiveAllocation: string;
+}
 
-  useEffect(() => {
-    const fetchCurrentPrice = async () => {
-      try {
-        if (!position.State) {
-          setCurrentPrice(parseFloat(position.SavedPrice));
-          return;
-        }
-        const data = await YFinanceService.getQuote(position.Symbol);
-        const price = typeof data === "string" ? NaN : data.price;
-        setCurrentPrice(isNaN(price) ? 0 : price);
-      } catch (error) {
-        console.error(
-          `Error al obtener el precio para ${position.Symbol}:`,
-          error
-        );
-        setCurrentPrice(0);
-      }
-    };
-    fetchCurrentPrice();
-  }, [position]);
-
-  useEffect(() => {
-    if (!position) return;
-
+export async function fetchPositionProfitability(position: PositionData) {
     try {
-      const priceEntries = JSON.parse(position.PriceEntry);
-      const allocations = JSON.parse(position.ActiveAllocation);
+        const serverConfig = config.isDevelopment ? config.development.server : config.production.server;
+        const baseURL = `http://${serverConfig.ip}:${serverConfig.port}/procesar-transacciones`;
 
-      let totalCost = 0;
-      let totalAllocation = 0;
-      let previousAllocation = 0;
-      let newActiveAllocation = 0;
-      let grossProfitPartial = 0;
-      let grossProfitTotal = 0;
-      let maxAllocation = 0;
+        const priceEntries = JSON.parse(position.PriceEntry);
+        const allocations = JSON.parse(position.ActiveAllocation);
 
-      // Calcular precio promedio ponderado
-      priceEntries.forEach((entry) => {
-        const allocation = allocations.find((a) => a.id === entry.id);
-        if (!allocation) return;
+        const tipoPosicion = position.TradeDirection === "Buy" ? "largo" : "corto";
+        const precioEntrada = parseFloat(priceEntries.find((entry: any) => entry.id === 1)?.price || "0");
+        const symbol = position.Symbol;
 
-        const price = parseFloat(entry.price);
-        const activeAllocation = parseFloat(allocation.activeAllocation);
-        const type = entry.type || "initial";
+        const transacciones = priceEntries.slice(1).map((entry: any) => {
+            const allocation = allocations.find((alloc: any) => alloc.id === entry.id);
+            if (!allocation) return null;
+            
+            const porcentaje = parseFloat(allocation.activeAllocation) / 100;
+            const tipo = entry.type === "add" ? "adicion" : entry.type === "decrease" ? "toma_parcial" : "cierre_total";
 
-        if (type === "initial") {
-          totalAllocation = activeAllocation;
-          totalCost = price * activeAllocation;
-        } else if (type === "add") {
-          const newAllocation = previousAllocation * (activeAllocation / 100);
-          totalAllocation += newAllocation;
-          totalCost += price * newAllocation;
+            return { tipo, porcentaje, precio: parseFloat(entry.price) };
+        }).filter(Boolean);
+
+        const requestData = { tipoPosicion, precioEntrada, symbol, transacciones };
+
+        console.log("📤 Objeto enviado a la calculadora:", JSON.stringify(requestData, null, 2));
+        console.log("🚀 Enviando solicitud al servidor:", requestData);
+
+        const response = await fetch(baseURL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(requestData)
+        });
+        
+        if (!response.ok) {
+            throw new Error(`Error ${response.status}`);
         }
-
-        previousAllocation = totalAllocation;
-        maxAllocation = Math.max(maxAllocation, totalAllocation);
-      });
-
-      const weightedAvg = totalCost / totalAllocation;
-      setWeightedAvgPrice(weightedAvg);
-
-      // Calcular rentabilidad total desde el inicio
-      const factorActive =
-        (totalAllocation / maxAllocation) *
-        (position.TradeDirection === "Buy"
-          ? (presentPrice - weightedAvg) / weightedAvg
-          : (weightedAvg - presentPrice) / weightedAvg);
-      let totalProfit = factorActive;
-
-      // Calcular rentabilidad parcial y total incluyendo tomas parciales
-      priceEntries.forEach((entry) => {
-        const allocation = allocations.find((a) => a.id === entry.id);
-        if (!allocation) return;
-
-        const price = parseFloat(entry.price);
-        const activeAllocation = parseFloat(allocation.activeAllocation);
-        const type = entry.type;
-
-        if (type === "decrease") {
-          const decreaseAllocation =
-            previousAllocation * (activeAllocation / 100);
-          newActiveAllocation = previousAllocation - decreaseAllocation;
-          const partialProfit =
-            position.TradeDirection === "Buy"
-              ? (price - weightedAvg) / weightedAvg
-              : (weightedAvg - price) / weightedAvg;
-          const factorPartial =
-            ((previousAllocation - newActiveAllocation) / maxAllocation) *
-            partialProfit;
-          const factorActivePosition =
-            (newActiveAllocation / maxAllocation) *
-            (position.TradeDirection === "Buy"
-              ? (presentPrice - weightedAvg) / weightedAvg
-              : (weightedAvg - presentPrice) / weightedAvg);
-          grossProfitPartial += factorPartial + factorActivePosition;
-        } else if (type === "close") {
-          const closeAllocation = newActiveAllocation;
-          newActiveAllocation = 0;
-          const closeProfit =
-            (position.TradeDirection === "Buy"
-              ? price - weightedAvg
-              : weightedAvg - price) / weightedAvg;
-          grossProfitTotal += closeProfit;
-        }
-      });
-
-      totalProfit += grossProfitPartial;
-      setActiveAssignment(newActiveAllocation || totalAllocation);
-      setPartialProfitability(grossProfitPartial);
-      setTotalProfitability(totalProfit);
-
-      console.log(`\n[PROFITABILITY REPORT]`);
-      console.log(`----------------------------------`);
-      console.log(`Símbolo: ${position.Symbol}`);
-      console.log(`Precio Promedio Ponderado: ${weightedAvg}`);
-      console.log(
-        `Asignación Activa Actual: ${
-          newActiveAllocation > 0 ? newActiveAllocation : totalAllocation
-        }`
-      );
-      console.log(`Rentabilidad Parcial: ${grossProfitPartial}`);
-      console.log(`Rentabilidad Total: ${totalProfit}`);
-      console.log(`----------------------------------\n`);
-    } catch (error) {
-      console.error("Error en el cálculo de rentabilidad:", error);
+        
+        const data = await response.json();
+        console.log("✅ Respuesta recibida:", data);
+        return data;
+    } catch (err: any) {
+        console.error("❌ Error al procesar la solicitud:", err);
+        return { error: err.message || "No disponible" };
     }
-  }, [position, presentPrice]);
-
-  return {
-    presentPrice,
-    weightedAvgPrice,
-    activeAssignment,
-    partialProfitability,
-    totalProfitability,
-  };
-};
-
-export default PositionProfitabilityCalculator;
+}

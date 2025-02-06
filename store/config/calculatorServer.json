@@ -1,0 +1,17 @@
+{
+    "isDevelopment": true,
+    "development": {
+        "server": {
+            "name": "JPTT-LOCALHOST",
+            "ip": "localhost",
+            "port": 3600
+        }
+    },
+    "production": {
+        "server": {
+            "name": "ProdServer",
+            "ip": "160.238.36.130",
+            "port": 3600
+        }
+    }
+}

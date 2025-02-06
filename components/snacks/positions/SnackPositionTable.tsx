@@ -7,6 +7,7 @@ import SnackPartialAdd from "./SnackPartialAdd";
 import SnackProfitabilityPosition from "./SnackProfitabilityPosition";
 import YFinanceService from "@/hooks/recipes/YFinanceService";
 import { useAuth } from "@/hooks/recipes/authService"; // ✅ Importar la autenticación
+import { fetchPositionProfitability } from "@/recipes/calculators/PositionProfitabilityCalculator";
 
 const { width: screenWidth } = Dimensions.get("window");
 
@@ -49,6 +50,35 @@ const SnackPositionTable: React.FC<SnackPositionTableProps> = ({
     [symbol: string]: number;
   }>({});
   const { user } = useAuth(); // ✅ Verifica si hay usuario autenticado
+  const [profitabilityData, setProfitabilityData] = useState<{
+    [symbol: string]: { rentabilidadTotal: string; asignacionActiva: string };
+  }>({});
+
+  // Obtener datos de rentabilidad para cada posición
+  useEffect(() => {
+    const fetchProfitability = async () => {
+      const results: any = {};
+
+      for (const position of positions) {
+        const result = await fetchPositionProfitability(position);
+
+        const rentabilidadTotal = position.State
+          ? result?.estadoActual?.rentabilidadTotalActiva ?? "No disponible"
+          : result?.historial?.find((item: any) => item.tipo === "cierre_total")
+              ?.rentabilidadTotal ?? "No disponible";
+
+        const asignacionActiva = position.State
+          ? result?.estadoActual?.porcentajeAsignacionActiva ?? "No disponible"
+          : "0%";
+
+        results[position.Symbol] = { rentabilidadTotal, asignacionActiva };
+      }
+
+      setProfitabilityData(results);
+    };
+
+    fetchProfitability();
+  }, [positions]);
 
   const fetchCurrentPrice = async (symbol: string) => {
     try {
@@ -218,7 +248,7 @@ const SnackPositionTable: React.FC<SnackPositionTableProps> = ({
                 "Dirección",
                 "Estado",
                 "Fecha",
-                "Asignación",
+                "Rentabilidad",
                 "Acciones",
               ].map((header, index) => (
                 <DataTable.Title
@@ -308,12 +338,14 @@ const SnackPositionTable: React.FC<SnackPositionTableProps> = ({
                     </Text>
                   </DataTable.Cell>
                   <DataTable.Cell style={styles.cell}>
-                    <Text style={[styles.numberText, { color: colors.text }]}>
-                      {/* Agregar el componente de rentabilidad después de la fecha de operación */}
-
-                      
-                    </Text>
-                  </DataTable.Cell>
+  <Text style={[styles.numberText, { color: colors.text }]}>
+    {`RT/ ${profitabilityData[position.Symbol]?.rentabilidadTotal !== "No disponible" 
+      ? `${profitabilityData[position.Symbol]?.rentabilidadTotal}%` 
+      : "No disponible"}  AA ${profitabilityData[position.Symbol]?.asignacionActiva !== "No disponible" 
+      ? `${profitabilityData[position.Symbol]?.asignacionActiva}%` 
+      : "No disponible"}`}
+  </Text>
+</DataTable.Cell>
                   <DataTable.Cell style={styles.cell}>
                     <View
                       style={{ flexDirection: "row", alignItems: "center" }}

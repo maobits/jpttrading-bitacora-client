@@ -13,8 +13,7 @@ import YFinanceService from "@/hooks/recipes/YFinanceService";
 import SnackHistoricalSymbol from "./SnackHistoricalSymbol";
 import SnackPartialAdd from "./SnackPartialAdd"; // Asegúrate de que este componente esté importado correctamente
 import { useAuth } from "@/hooks/recipes/authService"; // ✅ Importar la autenticación
-import PositionProfitabilityCalculator from "@/recipes/calculators/PositionProfitabilityCalculator";
-
+import { fetchPositionProfitability } from "@/recipes/calculators/PositionProfitabilityCalculator";
 
 // Helper para formatear valores en dólares americanos
 const formatCurrency = (value) => {
@@ -30,26 +29,55 @@ const SnackPositionCard = ({ position, viewMode, onUpdate }) => {
   const [modalVisible, setModalVisible] = useState(false); // Para el historial
   const [plusModalVisible, setPlusModalVisible] = useState(false); // Para el plus
   const [entryPrice, setEntryPrice] = useState("Cargando...");
-  const [averagePrice, setAveragePrice] = useState("Cargando...");
-  const [activeAllocation, setActiveAllocation] = useState("No disponible");
   const [priceHistory, setPriceHistory] = useState([]);
   const [activeAllocationHistory, setActiveAllocationHistory] = useState([]);
   const { user } = useAuth(); // ✅ Verifica si hay usuario autenticado
-  const [profitability, setProfitability] = useState("Calculando...");
-
 
   const isBuy = position.TradeDirection === "Buy";
 
-  // Obtener datos calculados.
-  const {
-    presentPrice,
-    weightedAvgPrice,
-    activeAssignment,
-    partialProfitability,
-    totalProfitability,
-  } = PositionProfitabilityCalculator({ position });
+  // Datos de la calculadora de rentabilidad.
+  const [TotalProfitability, setTotalProfitability] = useState<string | null>(
+    null
+  );
+
+  const [activeAssignment, setActiveAssignment] = useState<string | null>(null);
+
+  const [AveragePrice, setAveragePrice] = useState<string | null>(null);
+
+  const [StatusPosition, setStatusPosition] = useState<string | null>(null);
+
+  const [totalReturnClosedPosition, setTotalReturnClosedPosition] = useState<string | null>(null);
+
+  const [loading, setLoading] = useState<boolean>(true);
+
+  
 
 
+
+  useEffect(() => {
+    const obtenerRentabilidad = async () => {
+      const result = await fetchPositionProfitability(position);
+      setTotalProfitability(
+        result?.estadoActual?.rentabilidadTotalActiva ?? "No disponible"
+      );
+      setActiveAssignment(
+        result?.estadoActual?.porcentajeAsignacionActiva ?? "No disponible"
+      );
+      setAveragePrice(result?.estadoActual?.precioPromedio ?? "No disponible");
+
+      setTotalReturnClosedPosition(
+        result?.historial?.find((item: any) => item.tipo === "cierre_total")?.rentabilidadTotal ?? "No disponible"
+      );
+      
+      setStatusPosition(position?.Status ?? "No disponible");
+
+
+
+      setLoading(false);
+    };
+
+    obtenerRentabilidad();
+  }, []);
 
   useEffect(() => {
     const fetchCurrentPrice = async () => {
@@ -79,13 +107,10 @@ const SnackPositionCard = ({ position, viewMode, onUpdate }) => {
             ? parseFloat(priceEntryObject.price).toFixed(2)
             : "No disponible"
         );
-       
-     
       } catch (error) {
         // Manejo de errores
         console.error("Error al parsear datos:", error);
         setEntryPrice("No disponible");
-       
       }
     };
 
@@ -126,6 +151,7 @@ const SnackPositionCard = ({ position, viewMode, onUpdate }) => {
     parseDatabaseValues();
   }, [position.PriceEntry, position.ActiveAllocation]);
 
+
   return (
     <>
       <Card style={[styles.card, { backgroundColor: colors.background }]}>
@@ -138,7 +164,6 @@ const SnackPositionCard = ({ position, viewMode, onUpdate }) => {
           }}
           right={(props) => (
             <View style={styles.rightContainer}>
-             
               <View style={styles.historyContainer}>
                 <MaterialIcons
                   name="calendar-today"
@@ -194,7 +219,8 @@ const SnackPositionCard = ({ position, viewMode, onUpdate }) => {
               Precio Promedio:
             </Text>
             <Text style={[styles.value, { color: colors.text }]}>
-              {"$" + weightedAvgPrice.toFixed(2)}
+              {" "}
+              {AveragePrice !== null ? `${AveragePrice}%` : "¡No disponible!"}
             </Text>
           </View>
           <View style={styles.row}>
@@ -238,30 +264,37 @@ const SnackPositionCard = ({ position, viewMode, onUpdate }) => {
             </Text>
           </View>
           <Divider style={styles.divider} />
-          
-          {/* Agregar el componente de rentabilidad después de la fecha de operación */}
           <View style={styles.row}>
-            <MaterialIcons name="date-range" size={20} color={colors.text} />
-            <Text style={[styles.label, { color: colors.text }]}>
-              Retabilidad total
-            </Text>
-            <Text style={[styles.value, { color: colors.text }]}>
-            {(Math.trunc(totalProfitability * 100) / 100).toFixed(2)}%
-            </Text>
-          </View>
+    <MaterialIcons name="trending-up" size={20} color={colors.text} />
+    <Text style={[styles.label, { color: colors.text }]}>
+      Rentabilidad total:
+    </Text>
+    <Text style={[styles.value, { color: colors.text }]}>
+      {position.State
+        ? TotalProfitability !== null
+          ? `${TotalProfitability}%`
+          : "¡No disponible!"
+        : totalReturnClosedPosition !== null
+          ? `${totalReturnClosedPosition}%`
+          : "¡No disponible!"}
+    </Text>
+</View>
 
-           {/* Agregar el componente de rentabilidad después de la fecha de operación */}
-           <View style={styles.row}>
-            <MaterialIcons name="date-range" size={20} color={colors.text} />
-            <Text style={[styles.label, { color: colors.text }]}>
-              Asignación activa
-            </Text>
-            <Text style={[styles.value, { color: colors.text }]}>
-            {(Math.trunc(activeAssignment * 100) / 100).toFixed(2)}%
-           
-            </Text>
-          </View>
-          
+<View style={styles.row}>
+    <MaterialIcons name="trending-up" size={20} color={colors.text} />
+    <Text style={[styles.label, { color: colors.text }]}>
+      Asignación activa:
+    </Text>
+    <Text style={[styles.value, { color: colors.text }]}>
+      {position.State
+        ? activeAssignment !== null
+          ? `${activeAssignment}%`
+          : "¡No disponible!"
+        : "0%"}
+    </Text>
+</View>s
+
+          {/* Agregar el componente de rentabilidad después de la fecha de operación */}
 
           <View style={styles.row}>
             {position.State ? (
@@ -274,20 +307,18 @@ const SnackPositionCard = ({ position, viewMode, onUpdate }) => {
               <MaterialIcons name="lock" size={20} color={colors.secondary} />
             )}
             <View
-  style={{
-    backgroundColor: isBuy ? colors.primary : colors.secondary,
-    borderRadius: 5, // Bordes redondeados
-    paddingVertical: 2,
-    paddingHorizontal: 8, // Ajuste interno para que no se vea pegado
-    marginLeft: 8, // Espaciado a la izquierda
-  }}
->
-  <Text style={[styles.label, { color: colors.text_black }]}>
-    {isBuy ? "COMPRA" : "VENTA"}
-  </Text>
-</View>
-
-            
+              style={{
+                backgroundColor: isBuy ? colors.primary : colors.secondary,
+                borderRadius: 5, // Bordes redondeados
+                paddingVertical: 2,
+                paddingHorizontal: 8, // Ajuste interno para que no se vea pegado
+                marginLeft: 8, // Espaciado a la izquierda
+              }}
+            >
+              <Text style={[styles.label, { color: colors.text_black }]}>
+                {isBuy ? "COMPRA" : "VENTA"}
+              </Text>
+            </View>
           </View>
         </Card.Content>
       </Card>
@@ -340,18 +371,34 @@ const SnackPositionCard = ({ position, viewMode, onUpdate }) => {
         >
           <SnackPartialAdd
             positionId={position.id}
-            onClose={() => {
-              console.log("📌 Cierre de modal y recarga de posiciones"); // 🔹 Log de verificación
-              setPlusModalVisible(false);
-              if (onUpdate) {
-                onUpdate(); // ✅ Llama `onUpdate` solo si está definido
-              } else {
-                console.warn(
-                  "⚠️ onUpdate no está definido en SnackPositionCard"
+            onClose={async () => {
+                console.log("📌 Cierre de modal y recarga de posiciones"); 
+                setPlusModalVisible(false);
+
+                // ✅ Volver a llamar a la calculadora después de cerrar el modal
+                setLoading(true);
+                const result = await fetchPositionProfitability(position);
+                setTotalProfitability(
+                    result?.estadoActual?.rentabilidadTotalActiva ?? "No disponible"
                 );
-              }
+                setActiveAssignment(
+                    result?.estadoActual?.porcentajeAsignacionActiva ?? "No disponible"
+                );
+                setAveragePrice(result?.estadoActual?.precioPromedio ?? "No disponible");
+                setTotalReturnClosedPosition(
+                    result?.historial?.find((item: any) => item.tipo === "cierre_total")?.rentabilidadTotal ?? "No disponible"
+                );
+                setStatusPosition(position?.Status ?? "No disponible");
+                setLoading(false);
+
+                // Llamar a `onUpdate` si está definido
+                if (onUpdate) {
+                    onUpdate();
+                } else {
+                    console.warn("⚠️ onUpdate no está definido en SnackPositionCard");
+                }
             }}
-          />
+        />
           <Button
             mode="contained"
             onPress={() => setPlusModalVisible(false)}
