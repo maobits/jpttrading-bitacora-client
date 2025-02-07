@@ -1,13 +1,22 @@
 import React, { useState, useEffect } from "react";
-import { ScrollView, View, StyleSheet, Modal, Dimensions } from "react-native";
+import {
+  ScrollView,
+  View,
+  StyleSheet,
+  Modal,
+  Dimensions,
+  TouchableOpacity,
+} from "react-native";
 import { Text, Button, DataTable, IconButton } from "react-native-paper";
 import { useTheme } from "@/hooks/useThemeProvider";
 import SnackHistoricalSymbol from "./SnackHistoricalSymbol";
+import { MaterialIcons, MaterialCommunityIcons } from "@expo/vector-icons";
 import SnackPartialAdd from "./SnackPartialAdd";
 import SnackProfitabilityPosition from "./SnackProfitabilityPosition";
 import YFinanceService from "@/hooks/recipes/YFinanceService";
 import { useAuth } from "@/hooks/recipes/authService"; // ✅ Importar la autenticación
 import { fetchPositionProfitability } from "@/recipes/calculators/PositionProfitabilityCalculator";
+import SnackPositionReport from "./SnackPositionReport";
 
 const { width: screenWidth } = Dimensions.get("window");
 
@@ -60,6 +69,14 @@ const SnackPositionTable: React.FC<SnackPositionTableProps> = ({
     window.location.reload();
   };
 
+  const [historyModalVisible, setHistoryModalVisible] = useState(false);
+  const [positionData, setPositionData] = useState(null);
+
+  const openReportModal = (position) => {
+    setSelectedPosition(position);
+    setHistoryModalVisible(true);
+  };
+
   // Obtener datos de rentabilidad para cada posición
   useEffect(() => {
     const fetchProfitability = async () => {
@@ -72,6 +89,8 @@ const SnackPositionTable: React.FC<SnackPositionTableProps> = ({
           ? result?.estadoActual?.rentabilidadTotalActiva ?? "No disponible"
           : result?.historial?.find((item: any) => item.tipo === "cierre_total")
               ?.rentabilidadTotal ?? "No disponible";
+
+        setPositionData(result);
 
         const asignacionActiva = position.State
           ? result?.estadoActual?.porcentajeAsignacionActiva ?? "No disponible"
@@ -329,10 +348,37 @@ const SnackPositionTable: React.FC<SnackPositionTableProps> = ({
                     </Text>
                   </DataTable.Cell>
                   <DataTable.Cell style={styles.cell}>
-                    <Text style={[styles.cellText, { color: colors.text }]}>
-                      {isBuy ? "Compra" : "Venta"}
-                    </Text>
+                    <TouchableOpacity onPress={() => openReportModal(position)}>
+                      <View
+                        style={{
+                          flexDirection: "row",
+                          backgroundColor: isBuy
+                            ? colors.primary
+                            : colors.secondary,
+                          borderRadius: 4,
+                          paddingVertical: 4,
+                          paddingHorizontal: 8,
+                          alignItems: "center",
+                        }}
+                      >
+                        <MaterialIcons
+                          name="event-note"
+                          size={16}
+                          color={colors.text_black}
+                          style={{ marginRight: 4 }}
+                        />
+                        <Text
+                          style={[
+                            styles.cellText,
+                            { color: colors.text_black },
+                          ]}
+                        >
+                          {isBuy ? "Compra" : "Venta"}
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
                   </DataTable.Cell>
+
                   <DataTable.Cell style={styles.cell}>
                     <Text style={{ color: statusColor }}>
                       {position.State ? "Abierta" : "Cerrada"}
@@ -451,6 +497,28 @@ const SnackPositionTable: React.FC<SnackPositionTableProps> = ({
               onClose={handleUpdateAfterPartialAdd} // ✅ Ahora usa la función corregida
             />
           )}
+        </ScrollView>
+      </Modal>
+
+      <Modal
+        visible={historyModalVisible}
+        animationType="slide"
+        transparent={false}
+      >
+        <ScrollView
+          contentContainerStyle={{
+            backgroundColor: colors.surface,
+            padding: 20,
+          }}
+        >
+          <SnackPositionReport data={positionData} />
+          <Button
+            mode="contained"
+            onPress={() => setHistoryModalVisible(false)}
+            style={{ marginTop: 10 }}
+          >
+            Cerrar
+          </Button>
         </ScrollView>
       </Modal>
     </>

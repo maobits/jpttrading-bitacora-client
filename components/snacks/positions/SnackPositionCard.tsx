@@ -14,6 +14,9 @@ import SnackHistoricalSymbol from "./SnackHistoricalSymbol";
 import SnackPartialAdd from "./SnackPartialAdd"; // Asegúrate de que este componente esté importado correctamente
 import { useAuth } from "@/hooks/recipes/authService"; // ✅ Importar la autenticación
 import { fetchPositionProfitability } from "@/recipes/calculators/PositionProfitabilityCalculator";
+import SnackPositionReport from "./SnackPositionReport";
+
+
 
 // Helper para formatear valores en dólares americanos
 const formatCurrency = (value) => {
@@ -32,6 +35,9 @@ const SnackPositionCard = ({ position, viewMode, onUpdate }) => {
   const [priceHistory, setPriceHistory] = useState([]);
   const [activeAllocationHistory, setActiveAllocationHistory] = useState([]);
   const { user } = useAuth(); // ✅ Verifica si hay usuario autenticado
+  const [historyModalVisible, setHistoryModalVisible] = useState(false);
+  const [rentabilidadData, setRentabilidadData] = useState(null);
+  const [positionData, setPositionData] = useState(null);
 
   const isBuy = position.TradeDirection === "Buy";
 
@@ -56,12 +62,14 @@ const SnackPositionCard = ({ position, viewMode, onUpdate }) => {
     console.log("📌 Recargando la página...");
     setPlusModalVisible(false);
     window.location.reload();
-};
-
+  };
 
   useEffect(() => {
     const obtenerRentabilidad = async () => {
       const result = await fetchPositionProfitability(position);
+      
+      setPositionData(result);
+
       setTotalProfitability(
         result?.estadoActual?.rentabilidadTotalActiva ?? "No disponible"
       );
@@ -299,30 +307,35 @@ const SnackPositionCard = ({ position, viewMode, onUpdate }) => {
 
           {/* Agregar el componente de rentabilidad después de la fecha de operación */}
 
-          <View style={styles.row}>
-            {position.State ? (
-              <MaterialCommunityIcons
-                name="checkbox-blank-circle"
-                size={20}
-                color="green"
-              />
-            ) : (
-              <MaterialIcons name="lock" size={20} color={colors.secondary} />
-            )}
-            <View
-              style={{
-                backgroundColor: isBuy ? colors.primary : colors.secondary,
-                borderRadius: 5, // Bordes redondeados
-                paddingVertical: 2,
-                paddingHorizontal: 8, // Ajuste interno para que no se vea pegado
-                marginLeft: 8, // Espaciado a la izquierda
-              }}
-            >
-              <Text style={[styles.label, { color: colors.text_black }]}>
-                {isBuy ? "COMPRA" : "VENTA"}
-              </Text>
-            </View>
-          </View>
+          <TouchableOpacity onPress={() => setHistoryModalVisible(true)}>
+  <View
+    style={{
+      backgroundColor: isBuy ? colors.primary : colors.secondary,
+      borderRadius: 4,
+      paddingVertical: 2,
+      paddingHorizontal: 6, // 🔹 Reduce el ancho sin afectar la legibilidad
+      marginLeft: 6, // 🔹 Ajuste menor del margen
+      minWidth: 50, // 🔹 Asegura un ancho mínimo sin ser excesivo
+      alignItems: "center",
+    }}
+  >
+    <Text
+      style={[
+        styles.label,
+        {
+          color: colors.text_black,
+          fontSize: 12, // 🔹 Un tamaño de texto más compacto
+          textAlign: "center",
+          letterSpacing: 0.2, // 🔹 Reduce la separación de letras
+          fontWeight: "600", // 🔹 Se mantiene negrita sin ser excesivo
+        },
+      ]}
+    >
+      {isBuy ? "HISTORIAL DE LA COMPRA" : "HISTORIAL DE LA VENTA"}
+    </Text>
+  </View>
+</TouchableOpacity>
+
         </Card.Content>
       </Card>
 
@@ -381,6 +394,28 @@ const SnackPositionCard = ({ position, viewMode, onUpdate }) => {
             onPress={() => setPlusModalVisible(false)}
             style={[styles.closeButton, { backgroundColor: colors.primary }]}
             labelStyle={{ color: "#FFFFFF" }}
+          >
+            Cerrar
+          </Button>
+        </ScrollView>
+      </Modal>
+
+      <Modal
+        visible={historyModalVisible}
+        animationType="slide"
+        transparent={false}
+      >
+        <ScrollView
+          contentContainerStyle={{
+            backgroundColor: colors.surface,
+            padding: 20,
+          }}
+        >
+          <SnackPositionReport data={positionData} />
+          <Button
+            mode="contained"
+            onPress={() => setHistoryModalVisible(false)}
+            style={{ marginTop: 10 }}
           >
             Cerrar
           </Button>

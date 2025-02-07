@@ -25,6 +25,7 @@ import { useAuth } from "@/hooks/recipes/authService"; // Servicio de autenticac
 import { MaterialIcons } from "@expo/vector-icons"; // ✅ Importar el icono de MaterialIcons
 import { fetchPortfolioProfitability } from "@/recipes/calculators/CalculatePortfolioProfitability";
 import LottieException from "@/components/snacks/animations/LottieException";
+import SnackTradingHistory from "@/components/snacks/portfolio/SnackTradingHistory";
 
 // Define the Position type
 interface Position {
@@ -50,6 +51,7 @@ export default function ManagePositions() {
   const [modalVisible, setModalVisible] = useState(false);
   const [showClosed, setShowClosed] = useState(false);
   const { user } = useAuth(); // Obtiene el usuario autenticado
+  const [historyModalVisible, setHistoryModalVisible] = useState(false); // 📌 Estado para mostrar el historial
 
   const loadPositions = async () => {
     try {
@@ -137,55 +139,62 @@ export default function ManagePositions() {
             </View>
           </View>
 
-          {/* 📌 Sección donde mostramos el resultado del cálculo */}
-          <View style={[styles.portfolioResultContainer]}>
-            <Text style={styles.portfolioResultTitle}>📊 Portafolio</Text>
-            <View style={styles.portfolioCard}>
-              <Text style={styles.portfolioResultValue}>
-                {showClosed
-                  ? portfolioResult.historial &&
-                    portfolioResult.historial.length > 0
-                    ? `RTC: ${portfolioResult.estadoActual.rentabilidadTotalCerrada}%`
-                    : "Sin datos"
-                  : portfolioResult.estadoActual &&
-                    portfolioResult.estadoActual.rentabilidadTotalActiva
-                  ? `RTA: ${portfolioResult.estadoActual.rentabilidadTotalActiva}%`
-                  : "Sin datos"}
-              </Text>
+          <TouchableOpacity onPress={() => setHistoryModalVisible(true)}>
+            <View style={[styles.portfolioResultContainer]}>
+              <Text style={styles.portfolioResultTitle}>📊 Portafolio</Text>
+              <View style={styles.portfolioCard}>
+                <Text style={styles.portfolioResultValue}>
+                  {showClosed
+                    ? portfolioResult?.historial?.length > 0
+                      ? `RTC: ${portfolioResult.estadoActual.rentabilidadTotalCerrada}%`
+                      : "Sin datos"
+                    : portfolioResult?.estadoActual?.rentabilidadTotalActiva
+                    ? `RTA: ${portfolioResult.estadoActual.rentabilidadTotalActiva}%`
+                    : "Sin datos"}
+                </Text>
+              </View>
             </View>
-          </View>
+          </TouchableOpacity>
         </View>
 
         {/* 📌 Mostrar Lottie si no hay posiciones */}
-{positions.length === 0 ? (
-  <View style={styles.emptyContainer}>
-    <LottieException size={250} />
-    <Text style={styles.emptyText}>
-      {showClosed
-        ? "No hay posiciones cerradas disponibles"
-        : "No hay posiciones abiertas disponibles"}
-    </Text>
-    <Button
-      mode="contained"
-      onPress={loadPositions}
-      style={styles.reloadButton}
-      labelStyle={styles.reloadButtonText}
-    >
-      Actualizar
-    </Button>
-  </View>
-) : viewMode === "card" ? (
-  <FlatList
-    data={positions}
-    renderItem={({ item }) => (
-      <SnackPositionCard position={item} viewMode={viewMode} onUpdate={loadPositions} />
-    )}
-    keyExtractor={(item) => item.id.toString()}
-    contentContainerStyle={styles.list}
-  />
-) : (
-  <SnackPositionTable positions={positions} viewMode={viewMode} onUpdate={loadPositions} />
-)}
+        {positions.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <LottieException size={250} />
+            <Text style={styles.emptyText}>
+              {showClosed
+                ? "No hay posiciones cerradas disponibles"
+                : "No hay posiciones abiertas disponibles"}
+            </Text>
+            <Button
+              mode="contained"
+              onPress={loadPositions}
+              style={styles.reloadButton}
+              labelStyle={styles.reloadButtonText}
+            >
+              Actualizar
+            </Button>
+          </View>
+        ) : viewMode === "card" ? (
+          <FlatList
+            data={positions}
+            renderItem={({ item }) => (
+              <SnackPositionCard
+                position={item}
+                viewMode={viewMode}
+                onUpdate={loadPositions}
+              />
+            )}
+            keyExtractor={(item) => item.id.toString()}
+            contentContainerStyle={styles.list}
+          />
+        ) : (
+          <SnackPositionTable
+            positions={positions}
+            viewMode={viewMode}
+            onUpdate={loadPositions}
+          />
+        )}
 
         {user && (
           <TouchableOpacity
@@ -206,6 +215,18 @@ export default function ManagePositions() {
             onClose={() => setModalVisible(false)}
             onSave={handleNewPosition}
           />
+        </Modal>
+
+       {/* 📌 Modal de Historial */}
+       <Modal visible={historyModalVisible} animationType="slide" onRequestClose={() => setHistoryModalVisible(false)}>
+          <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: colors.background }}>
+            {portfolioResult && (
+              <SnackTradingHistory portfolioResult={portfolioResult} showClosed={showClosed} />
+            )}
+            <Button mode="contained" onPress={() => setHistoryModalVisible(false)}>
+              Cerrar
+            </Button>
+          </View>
         </Modal>
       </View>
     </Provider>
