@@ -89,6 +89,42 @@ const PositionsService = {
     }
   },
 
+getClosedPositionsWithFilter: async (months: number): Promise<any> => {
+  try {
+    console.log(
+      `🚀 Solicitando posiciones cerradas con antigüedad de ${months} meses...`
+    );
+
+    const { ip, port } = connectionService.getServerConfig();
+    apiClient.defaults.baseURL = `http://${ip}:${port}/api/positions/closed-positions-with-filter`;
+
+    const token = getGeneralToken();
+
+    // 📌 Se envía el número de meses como parámetro en la URL
+    const response = await apiClient.get("/", {
+      headers: {
+        "x-api-key": token, // Usar x-api-key en lugar de Authorization
+      },
+      params: { months }, // 🔹 Parámetro para filtrar la antigüedad en meses
+    });
+
+    console.log(
+      "✅ Posiciones cerradas obtenidas exitosamente con filtro:",
+      response.data
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error(
+      "❌ Error al obtener posiciones cerradas con filtro:",
+      error.response?.data || error.message
+    );
+    throw error;
+  }
+},
+
+
+
   // Crear una posición
   createPosition: async (data: Record<string, unknown>): Promise<any> => {
     try {

@@ -6,6 +6,7 @@ import {
   ActivityIndicator,
   Modal,
   TouchableOpacity,
+  ScrollView,
 } from "react-native";
 import {
   Text,
@@ -15,6 +16,7 @@ import {
   Provider,
   IconButton,
   Button,
+  List,
 } from "react-native-paper";
 import { useTheme } from "@/hooks/useThemeProvider";
 import PositionsService from "@/hooks/recipes/PositionService";
@@ -52,6 +54,12 @@ export default function ManagePositions() {
   const [showClosed, setShowClosed] = useState(false);
   const { user } = useAuth(); // Obtiene el usuario autenticado
   const [historyModalVisible, setHistoryModalVisible] = useState(false); // 📌 Estado para mostrar el historial
+  const [monthsFilterModalVisible, setMonthsFilterModalVisible] =
+    useState(false);
+  const [selectedMonths, setSelectedMonths] = useState<number>(1);
+  const [filteredClosedPositions, setFilteredClosedPositions] = useState<
+    Position[]
+  >([]);
 
   const loadPositions = async () => {
     try {
@@ -78,6 +86,29 @@ export default function ManagePositions() {
       setLoading(false);
     }
   };
+
+  const fetchClosedPositionsWithFilter = async () => {
+    try {
+      setLoading(true);
+      console.log(`Fetching closed positions with ${selectedMonths} months filter...`);
+  
+      const data = await PositionsService.getClosedPositionsWithFilter(selectedMonths);
+      setFilteredClosedPositions(data.results);
+    } catch (error) {
+      console.error("❌ Error fetching filtered closed positions:", error);
+    } finally {
+      setMonthsFilterModalVisible(false);
+      setLoading(false);
+    }
+  };
+  
+  useEffect(() => {
+    if (showClosed) {
+      console.log(`🔄 Cargando posiciones cerradas con filtro de ${selectedMonths} meses...`);
+      fetchClosedPositionsWithFilter();
+    }
+  }, [showClosed]); // Se ejecuta cuando showClosed cambia a true
+  
 
   useEffect(() => {
     setLoading(true); // Mostrar loader mientras se cargan los datos
@@ -110,18 +141,23 @@ export default function ManagePositions() {
       >
         <View style={styles.header}>
           <View style={styles.switchContainer}>
-            <View style={styles.switchGroup}>
-              <Text style={styles.switchLabel}>Estado:</Text>
-              <Switch
-                value={!showClosed}
-                onValueChange={() => setShowClosed((prev) => !prev)}
-                color={colors.primary}
-                style={styles.smallSwitch}
-              />
-              <Text style={styles.switchText}>
-                {!showClosed ? "Abiertas" : "Cerradas"}
-              </Text>
-            </View>
+          <View style={styles.switchGroup}>
+  <Text style={styles.switchLabel}>Estado:</Text>
+  <Switch
+    value={!showClosed}
+    onValueChange={() => setShowClosed((prev) => !prev)}
+    color={colors.primary}
+  />
+  {showClosed ? (
+    <TouchableOpacity onPress={() => setMonthsFilterModalVisible(true)}>
+      <Text style={[styles.switchText, styles.linkText]}>
+        {selectedMonths} {selectedMonths === 1 ? "mes" : "meses"}
+      </Text>
+    </TouchableOpacity>
+  ) : (
+    <Text style={styles.switchText}>Abiertas</Text>
+  )}
+</View>
 
             <View style={styles.switchGroup}>
               <Text style={styles.switchLabel}>Vista:</Text>
@@ -177,17 +213,12 @@ export default function ManagePositions() {
           </View>
         ) : viewMode === "card" ? (
           <FlatList
-            data={positions}
-            renderItem={({ item }) => (
-              <SnackPositionCard
-                position={item}
-                viewMode={viewMode}
-                onUpdate={loadPositions}
-              />
-            )}
-            keyExtractor={(item) => item.id.toString()}
-            contentContainerStyle={styles.list}
-          />
+          data={showClosed ? filteredClosedPositions : positions}
+          renderItem={({ item }) => (
+            <SnackPositionCard position={item} viewMode={viewMode} onUpdate={loadPositions} />
+          )}
+          keyExtractor={(item) => item.id.toString()}
+        />
         ) : (
           <SnackPositionTable
             positions={positions}
@@ -217,17 +248,76 @@ export default function ManagePositions() {
           />
         </Modal>
 
-       {/* 📌 Modal de Historial */}
-       <Modal visible={historyModalVisible} animationType="slide" onRequestClose={() => setHistoryModalVisible(false)}>
-          <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: colors.background }}>
+        {/* 📌 Modal de Historial */}
+        <Modal
+          visible={historyModalVisible}
+          animationType="slide"
+          onRequestClose={() => setHistoryModalVisible(false)}
+        >
+          <View
+            style={{
+              flex: 1,
+              justifyContent: "center",
+              alignItems: "center",
+              backgroundColor: colors.background,
+            }}
+          >
             {portfolioResult && (
-              <SnackTradingHistory portfolioResult={portfolioResult} showClosed={showClosed} />
+              <SnackTradingHistory
+                portfolioResult={portfolioResult}
+                showClosed={showClosed}
+              />
             )}
-            <Button mode="contained" onPress={() => setHistoryModalVisible(false)}>
+            <Button
+              mode="contained"
+              onPress={() => setHistoryModalVisible(false)}
+            >
               Cerrar
             </Button>
           </View>
         </Modal>
+
+
+        <Modal
+  visible={monthsFilterModalVisible}
+  animationType="slide"
+  transparent={true} // 🔹 Hace que el fondo sea más estético
+  onRequestClose={() => setMonthsFilterModalVisible(false)}
+>
+  <View style={styles.modalOverlay}>
+    <View style={styles.modalContainer}>
+      <Text style={styles.modalTitle}>Seleccionar Antigüedad</Text>
+
+      {/* 🔹 ScrollView permite desplazarse en caso de contenido extenso */}
+      <ScrollView style={styles.scrollContainer}>
+        {Array.from({ length: 12 }, (_, i) => i + 1).map((month) => (
+          <TouchableOpacity
+            key={month}
+            onPress={() => setSelectedMonths(month)}
+            style={[
+              styles.monthItem,
+              selectedMonths === month && styles.selectedMonthItem,
+            ]}
+          >
+            <Text
+              style={[
+                styles.monthItemText,
+                selectedMonths === month && styles.selectedMonthText,
+              ]}
+            >
+              {month} {month === 1 ? "mes" : "meses"}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+
+      {/* Botón para aplicar el filtro */}
+      <Button mode="contained" onPress={fetchClosedPositionsWithFilter} style={styles.applyButton}>
+        <Text style={styles.applyButtonText}>Aplicar Filtro</Text>
+      </Button>
+    </View>
+  </View>
+</Modal>
       </View>
     </Provider>
   );
@@ -359,4 +449,97 @@ const styles = StyleSheet.create({
     color: "#333", // 📌 Un color oscuro para mejor contraste
     fontFamily: "Montserrat-Bold", // 📌 Usa una fuente más estilizada
   },
+  linkText: {
+    color: "#007AFF",
+    textDecorationLine: "underline",
+  },
+  modalContent: {
+    padding: 20,
+    backgroundColor: "#fff",
+    justifyContent: "center",
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    textAlign: "center",
+    marginBottom: 10,
+  },
+
+  modalOverlay: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.6)", // 🔹 Fondo semitransparente
+  },
+  modalContainer: {
+    backgroundColor: "#0C0C0C", // 🔹 Fondo oscuro
+    padding: 20,
+    borderRadius: 12,
+    width: "85%",
+    maxHeight: "80%",
+    minHeight: "50%",
+    alignItems: "center",
+    elevation: 5,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontFamily: "Montserrat-Bold",
+    color: "#F2B705",
+    textAlign: "center",
+    marginBottom: 15,
+    textTransform: "uppercase",
+  },
+  scrollContainer: {
+    width: "100%",
+    maxHeight: 300, // 🔹 Scroll activo si hay más opciones
+  },
+  monthItem: {
+    backgroundColor: "#1E1E1E",
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    marginVertical: 6,
+    borderRadius: 8,
+    width: "100%",
+    alignItems: "center",
+  },
+  monthItemText: {
+    fontSize: 16,
+    fontFamily: "Montserrat-Regular",
+    color: "#FFFFFF",
+  },
+  selectedMonthItem: {
+    backgroundColor: "#F29F05",
+  },
+  selectedMonthText: {
+    fontFamily: "Montserrat-Bold",
+    color: "#0C0C0C",
+  },
+  applyButton: {
+    marginTop: 15,
+    backgroundColor: "#F29F05",
+    borderRadius: 8,
+    width: "85%",
+    paddingVertical: 12,
+  },
+  applyButtonText: {
+    fontFamily: "Montserrat-Bold",
+    fontSize: 18,
+    color: "#0C0C0C",
+    textAlign: "center",
+  },
+  closeButton: {
+    marginTop: 10,
+    backgroundColor: "#444",
+    borderRadius: 8,
+    width: "85%",
+    paddingVertical: 10,
+  },
+  closeButtonText: {
+    fontFamily: "Montserrat-Bold",
+    fontSize: 16,
+    color: "#FFF",
+    textAlign: "center",
+  },
+
+  
 });
