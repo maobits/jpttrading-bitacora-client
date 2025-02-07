@@ -17,6 +17,7 @@ import YFinanceService from "@/hooks/recipes/YFinanceService";
 import PositionsService from "@/hooks/recipes/PositionService";
 import { useTheme } from "@/hooks/useThemeProvider";
 import { SegmentedButtons } from "react-native-paper";
+import { DatePickerModal } from "react-native-paper-dates"; // 📆 Modal de selección de fecha
 
 interface SnackNewPositionProps {
   onClose: () => void;
@@ -37,8 +38,8 @@ export default function SnackNewPosition({
     takeProfit2: "",
     tradeDirection: "Buy",
     positionType: "Entry",
-    activeAllocation: "",
-    tradeDate: new Date().toISOString().split("T")[0],
+    activeAllocation: "100",
+    tradeDate: new Date(), // ✅ Ahora es un objeto Date
     priceEntries: [] as { id: number; price: string; date: string }[],
     activeAllocations: [] as {
       id: number;
@@ -46,6 +47,9 @@ export default function SnackNewPosition({
       date: string;
     }[],
   });
+
+  const [datePickerVisible, setDatePickerVisible] = useState(false); // Estado para mostrar el modal
+  const [tradeDate, setTradeDate] = useState<Date | undefined>(new Date()); // Estado para la fecha seleccionada
 
   const [errors, setErrors] = useState({
     symbol: "",
@@ -114,7 +118,7 @@ export default function SnackNewPosition({
       const newPriceEntry = {
         id: newId,
         price: formData.priceEntry,
-        date: new Date().toISOString(),
+        date: formData.tradeDate.toISOString().split("T")[0],
       };
       return JSON.stringify([...formData.priceEntries, newPriceEntry]);
     };
@@ -128,7 +132,7 @@ export default function SnackNewPosition({
       const newAllocation = {
         id: newId,
         activeAllocation: formData.activeAllocation,
-        date: new Date().toISOString(),
+        date: formData.tradeDate.toISOString().split("T")[0],
       };
       return JSON.stringify([...formData.activeAllocations, newAllocation]);
     };
@@ -143,7 +147,7 @@ export default function SnackNewPosition({
         TradeDirection: formData.tradeDirection,
         PositionType: formData.positionType,
         ActiveAllocation: addActiveAllocation(), // Almacenado como cadena JSON
-        TradeDate: formData.tradeDate,
+        TradeDate: formData.tradeDate.toISOString().split("T")[0], // ✅ Guarda la fecha en formato YYYY-MM-DD
         State: true,
       };
 
@@ -171,6 +175,31 @@ export default function SnackNewPosition({
         </View>
         <Divider
           style={[styles.divider, { backgroundColor: colors.primary }]}
+        />
+        <View style={{ marginBottom: 20 }}>
+          <Text style={{ fontSize: 16, fontWeight: "bold" }}>
+            Fecha de la Operación
+          </Text>
+
+          {/* Botón para abrir el selector de fecha */}
+          <Button mode="outlined" onPress={() => setDatePickerVisible(true)}>
+            {tradeDate
+              ? tradeDate.toISOString().split("T")[0]
+              : "Seleccionar Fecha"}
+          </Button>
+        </View>
+
+        <DatePickerModal
+          locale="es"
+          mode="single"
+          visible={datePickerVisible}
+          onDismiss={() => setDatePickerVisible(false)}
+          date={tradeDate} // ✅ Usa el estado actual de la fecha
+          onConfirm={(params) => {
+            setTradeDate(params.date); // ✅ Actualiza la fecha seleccionada
+            setFormData({ ...formData, tradeDate: params.date }); // ✅ Guarda la fecha en el formulario
+            setDatePickerVisible(false);
+          }}
         />
 
         <TextInput
@@ -245,6 +274,8 @@ export default function SnackNewPosition({
           style={styles.input}
           keyboardType="numeric"
           error={!!errors.activeAllocation}
+          disabled={true} // ✅ El usuario no puede modificarlo
+
         />
         <HelperText type="error" visible={!!errors.activeAllocation}>
           {errors.activeAllocation}
@@ -260,17 +291,21 @@ export default function SnackNewPosition({
         >
           Dirección de la Operación
         </Text>
-        <View style={{ marginVertical: 10, alignItems: "center", width: "100%" }}>
-  <SegmentedButtons
-    value={formData.tradeDirection}
-    onValueChange={(value) => handleInputChange("tradeDirection", value)}
-    buttons={[
-      { value: "Buy", label: "Compra", icon: "arrow-up-bold" },
-      { value: "Sell", label: "Venta", icon: "arrow-down-bold" },
-    ]}
-    style={{ width: "80%", minWidth: 200 }} // Ajusta el ancho
-  />
-</View>
+        <View
+          style={{ marginVertical: 10, alignItems: "center", width: "100%" }}
+        >
+          <SegmentedButtons
+            value={formData.tradeDirection}
+            onValueChange={(value) =>
+              handleInputChange("tradeDirection", value)
+            }
+            buttons={[
+              { value: "Buy", label: "Compra", icon: "arrow-up-bold" },
+              { value: "Sell", label: "Venta", icon: "arrow-down-bold" },
+            ]}
+            style={{ width: "80%", minWidth: 200 }} // Ajusta el ancho
+          />
+        </View>
 
         <View style={styles.buttonContainer}>
           <Button

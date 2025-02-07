@@ -18,6 +18,7 @@ import {
 } from "react-native-paper";
 import { useTheme } from "@/hooks/useThemeProvider";
 import PositionsService from "@/hooks/recipes/PositionService";
+import { DatePickerModal } from "react-native-paper-dates";
 
 const SnackPartialAdd = ({ positionId, onClose }) => {
   const { colors, fonts } = useTheme();
@@ -29,6 +30,11 @@ const SnackPartialAdd = ({ positionId, onClose }) => {
     activeAllocation: "",
   });
   const [loading, setLoading] = useState(false);
+
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(
+    new Date()
+  );
+  const [datePickerVisible, setDatePickerVisible] = useState(false);
 
   const validateFields = () => {
     let isValid = true;
@@ -72,70 +78,72 @@ const SnackPartialAdd = ({ positionId, onClose }) => {
     setLoading(true);
 
     try {
-        const position = await PositionsService.getPositionById(positionId);
+      const position = await PositionsService.getPositionById(positionId);
 
-        const priceEntries = Array.isArray(
-            JSON.parse(position.PriceEntry || "[]")
-        )
-            ? JSON.parse(position.PriceEntry || "[]")
-            : [];
-        const activeAllocations = Array.isArray(
-            JSON.parse(position.ActiveAllocation || "[]")
-        )
-            ? JSON.parse(position.ActiveAllocation || "[]")
-            : [];
+      const priceEntries = Array.isArray(
+        JSON.parse(position.PriceEntry || "[]")
+      )
+        ? JSON.parse(position.PriceEntry || "[]")
+        : [];
+      const activeAllocations = Array.isArray(
+        JSON.parse(position.ActiveAllocation || "[]")
+      )
+        ? JSON.parse(position.ActiveAllocation || "[]")
+        : [];
 
-        const newId = getNextIncrementalId(priceEntries);
+      const newId = getNextIncrementalId(priceEntries);
 
-        const updatedPriceEntries = [
-            ...priceEntries,
-            {
-                id: newId,
-                price: priceEntry,
-                type: type,
-                date: new Date().toISOString(),
-            },
-        ];
+      const updatedPriceEntries = [
+        ...priceEntries,
+        {
+          id: newId,
+          price: priceEntry,
+          type: type,
+          date: selectedDate ? selectedDate.toISOString() : new Date().toISOString().split("T")[0], // 📌 Usa la fecha seleccionada
+        },
+      ];
 
-        const updatedActiveAllocations = [
-            ...activeAllocations,
-            {
-                id: newId,
-                activeAllocation,
-                type: type,
-                date: new Date().toISOString(),
-            },
-        ];
+      const updatedActiveAllocations = [
+        ...activeAllocations,
+        {
+          id: newId,
+          activeAllocation,
+          type: type,
+          date: selectedDate ? selectedDate.toISOString() : new Date().toISOString().split("T")[0], // 📌 Usa la fecha seleccionada
+        },
+      ];
 
-        const updatedData = {
-            PriceEntry: JSON.stringify(updatedPriceEntries),
-            ActiveAllocation: JSON.stringify(updatedActiveAllocations),
-        };
+      const updatedData = {
+        PriceEntry: JSON.stringify(updatedPriceEntries),
+        ActiveAllocation: JSON.stringify(updatedActiveAllocations),
+      };
 
-        if (type === "close") {
-            updatedData.State = false;  
-            updatedData.SavedPrice = priceEntry;
-        }
+      if (type === "close") {
+        updatedData.State = false;
+        updatedData.SavedPrice = priceEntry;
+        updatedData.ClosingDate = selectedDate
+        ? selectedDate.toISOString().split("T")[0]
+        : new Date().toISOString().split("T")[0]; // 📌 Usa formato YYYY-MM-DD
+            }
 
-        // ✅ Esperar la actualización de la posición
-        await PositionsService.updatePosition(positionId, updatedData);
+      // ✅ Esperar la actualización de la posición
+      await PositionsService.updatePosition(positionId, updatedData);
 
-        console.log("✅ Posición actualizada con éxito:", updatedData);
+      console.log("✅ Posición actualizada con éxito:", updatedData);
 
-        alert("Datos actualizados con éxito.");
+      alert("Datos actualizados con éxito.");
 
-        // 🔄 Esperar antes de cerrar para asegurarse de que todo está sincronizado
-        setTimeout(() => {
-            onClose();
-        }, 500); // Espera 500ms para asegurarse de que la UI se actualiza antes de cerrar
+      // 🔄 Esperar antes de cerrar para asegurarse de que todo está sincronizado
+      setTimeout(() => {
+        onClose();
+      }, 500); // Espera 500ms para asegurarse de que la UI se actualiza antes de cerrar
     } catch (error) {
-        console.error("❌ Error al actualizar la posición:", error);
-        alert("No se pudo actualizar la posición. Intente de nuevo.");
+      console.error("❌ Error al actualizar la posición:", error);
+      alert("No se pudo actualizar la posición. Intente de nuevo.");
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
-};
-
+  };
 
   return (
     <KeyboardAvoidingView
@@ -161,37 +169,56 @@ const SnackPartialAdd = ({ positionId, onClose }) => {
           />
         </Card>
 
+        <View style={{ marginBottom: 20 }}>
+  <Text style={{ fontSize: 16, fontWeight: "bold" }}>Fecha de la operación</Text>
+  <Button mode="outlined" onPress={() => setDatePickerVisible(true)}>
+    {selectedDate ? selectedDate.toISOString().split("T")[0] : "Seleccionar Fecha"}
+  </Button>
+
+  {/* Modal de selección de fecha */}
+  <DatePickerModal
+    locale="es"
+    mode="single"
+    visible={datePickerVisible}
+    onDismiss={() => setDatePickerVisible(false)}
+    date={selectedDate}
+    onConfirm={(params) => {
+      setSelectedDate(params.date);
+      setDatePickerVisible(false);
+    }}
+  />
+</View>
+
+
         <Divider
           style={[styles.divider, { backgroundColor: colors.primary }]}
         />
 
-<RadioButton.Group
-  onValueChange={(value) => {
-    setType(value);
-    if (value === "close") {
-      setActiveAllocation("100"); // 🔹 Fija asignación en 100 si es cierre
-    }
-  }}
-  value={type}
->
-  <View style={styles.radioButtonContainer}>
-    <RadioButton value="add" color={colors.primary} />
-    <Text style={{ color: colors.black }}>Adición parcial</Text>
-  </View>
+        <RadioButton.Group
+          onValueChange={(value) => {
+            setType(value);
+            if (value === "close") {
+              setActiveAllocation("100"); // 🔹 Fija asignación en 100 si es cierre
+            }
+          }}
+          value={type}
+        >
+          <View style={styles.radioButtonContainer}>
+            <RadioButton value="add" color={colors.primary} />
+            <Text style={{ color: colors.black }}>Adición parcial</Text>
+          </View>
 
-  <View style={styles.radioButtonContainer}>
-    <RadioButton value="decrease" color={colors.primary} />
-    <Text style={{ color: colors.black }}>Toma parcial</Text>
-  </View>
+          <View style={styles.radioButtonContainer}>
+            <RadioButton value="decrease" color={colors.primary} />
+            <Text style={{ color: colors.black }}>Toma parcial</Text>
+          </View>
 
-  <View style={styles.radioButtonContainer}>
-    <RadioButton value="close" color={colors.primary} /> {/* 🔹 Cambio aquí */}
-    <Text style={{ color: colors.black }}>Cerrar posición</Text>
-  </View>
-</RadioButton.Group>
-
-
-        
+          <View style={styles.radioButtonContainer}>
+            <RadioButton value="close" color={colors.primary} />{" "}
+            {/* 🔹 Cambio aquí */}
+            <Text style={{ color: colors.black }}>Cerrar posición</Text>
+          </View>
+        </RadioButton.Group>
 
         <TextInput
           label="Precio de Entrada"
@@ -217,19 +244,19 @@ const SnackPartialAdd = ({ positionId, onClose }) => {
         </HelperText>
 
         <TextInput
-  label="Asignación Activa (%)"
-  value={type === "close" ? "100" : activeAllocation} // 🔹 Fijar en 100 si es cierre
-  onChangeText={(text) => {
-    if (type !== "close") {
-      setActiveAllocation(text);
-    }
-  }}
-  mode="outlined"
-  style={styles.input}
-  keyboardType="numeric"
-  error={!!errors.activeAllocation}
-  disabled={type === "close"} // 🔹 Deshabilitar si es cierre
-/>
+          label="Asignación Activa (%)"
+          value={type === "close" ? "100" : activeAllocation} // 🔹 Fijar en 100 si es cierre
+          onChangeText={(text) => {
+            if (type !== "close") {
+              setActiveAllocation(text);
+            }
+          }}
+          mode="outlined"
+          style={styles.input}
+          keyboardType="numeric"
+          error={!!errors.activeAllocation}
+          disabled={type === "close"} // 🔹 Deshabilitar si es cierre
+        />
         <HelperText type="error" visible={!!errors.activeAllocation}>
           {errors.activeAllocation}
         </HelperText>

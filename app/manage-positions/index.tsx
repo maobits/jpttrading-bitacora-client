@@ -14,6 +14,7 @@ import {
   Portal,
   Provider,
   IconButton,
+  Button,
 } from "react-native-paper";
 import { useTheme } from "@/hooks/useThemeProvider";
 import PositionsService from "@/hooks/recipes/PositionService";
@@ -23,6 +24,7 @@ import SnackNewPosition from "@/components/snacks/positions/SnackNewPosition";
 import { useAuth } from "@/hooks/recipes/authService"; // Servicio de autenticación
 import { MaterialIcons } from "@expo/vector-icons"; // ✅ Importar el icono de MaterialIcons
 import { fetchPortfolioProfitability } from "@/recipes/calculators/CalculatePortfolioProfitability";
+import LottieException from "@/components/snacks/animations/LottieException";
 
 // Define the Position type
 interface Position {
@@ -83,7 +85,7 @@ export default function ManagePositions() {
   const handleNewPosition = async (newPosition: Position) => {
     setPositions((prevPositions) => [newPosition, ...prevPositions]);
     setModalVisible(false);
-    
+
     // Recargar las posiciones y el rendimiento del portafolio
     await loadPositions();
   };
@@ -134,10 +136,10 @@ export default function ManagePositions() {
               </Text>
             </View>
           </View>
+
           {/* 📌 Sección donde mostramos el resultado del cálculo */}
           <View style={[styles.portfolioResultContainer]}>
             <Text style={styles.portfolioResultTitle}>📊 Portafolio</Text>
-
             <View style={styles.portfolioCard}>
               <Text style={styles.portfolioResultValue}>
                 {showClosed
@@ -154,26 +156,37 @@ export default function ManagePositions() {
           </View>
         </View>
 
-        {viewMode === "card" ? (
-          <FlatList
-            data={positions}
-            renderItem={({ item }) => (
-              <SnackPositionCard
-                position={item}
-                viewMode={viewMode}
-                onUpdate={loadPositions}
-              />
-            )}
-            keyExtractor={(item) => item.id.toString()}
-            contentContainerStyle={styles.list}
-          />
-        ) : (
-          <SnackPositionTable
-            positions={positions}
-            viewMode={viewMode}
-            onUpdate={loadPositions}
-          />
-        )}
+        {/* 📌 Mostrar Lottie si no hay posiciones */}
+{positions.length === 0 ? (
+  <View style={styles.emptyContainer}>
+    <LottieException size={250} />
+    <Text style={styles.emptyText}>
+      {showClosed
+        ? "No hay posiciones cerradas disponibles"
+        : "No hay posiciones abiertas disponibles"}
+    </Text>
+    <Button
+      mode="contained"
+      onPress={loadPositions}
+      style={styles.reloadButton}
+      labelStyle={styles.reloadButtonText}
+    >
+      Actualizar
+    </Button>
+  </View>
+) : viewMode === "card" ? (
+  <FlatList
+    data={positions}
+    renderItem={({ item }) => (
+      <SnackPositionCard position={item} viewMode={viewMode} onUpdate={loadPositions} />
+    )}
+    keyExtractor={(item) => item.id.toString()}
+    contentContainerStyle={styles.list}
+  />
+) : (
+  <SnackPositionTable positions={positions} viewMode={viewMode} onUpdate={loadPositions} />
+)}
+
         {user && (
           <TouchableOpacity
             style={styles.smallButton}
@@ -302,5 +315,27 @@ const styles = StyleSheet.create({
     color: "#0C0C0C",
     textAlign: "center",
     paddingVertical: 2, // Menos padding
+  },
+  reloadButton: {
+    backgroundColor: "#F29F05", // 📌 Color del portafolio
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    marginTop: 10,
+    elevation: 3, // Sombra para resaltar el botón
+  },
+
+  reloadButtonText: {
+    color: "#0C0C0C", // 📌 Mismo color del texto del portafolio
+    fontFamily: "Montserrat-Bold",
+    fontSize: 22,
+  },
+  emptyText: {
+    textAlign: "center", // 📌 Centra el texto horizontalmente
+    fontSize: 22, // 📌 Aumenta el tamaño del texto para mejor visibilidad
+    fontWeight: "bold", // 📌 Hace el texto en negrita
+    marginVertical: 15, // 📌 Espaciado superior e inferior
+    color: "#333", // 📌 Un color oscuro para mejor contraste
+    fontFamily: "Montserrat-Bold", // 📌 Usa una fuente más estilizada
   },
 });
