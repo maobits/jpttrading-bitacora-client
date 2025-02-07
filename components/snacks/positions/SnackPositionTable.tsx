@@ -54,6 +54,12 @@ const SnackPositionTable: React.FC<SnackPositionTableProps> = ({
     [symbol: string]: { rentabilidadTotal: string; asignacionActiva: string };
   }>({});
 
+  const handleUpdateAfterPartialAdd = async () => {
+    console.log("📌 Recargando la página...");
+    setPlusModalVisible(false);
+    window.location.reload();
+  };
+
   // Obtener datos de rentabilidad para cada posición
   useEffect(() => {
     const fetchProfitability = async () => {
@@ -338,14 +344,26 @@ const SnackPositionTable: React.FC<SnackPositionTableProps> = ({
                     </Text>
                   </DataTable.Cell>
                   <DataTable.Cell style={styles.cell}>
-  <Text style={[styles.numberText, { color: colors.text }]}>
-    {`RT/ ${profitabilityData[position.Symbol]?.rentabilidadTotal !== "No disponible" 
-      ? `${profitabilityData[position.Symbol]?.rentabilidadTotal}%` 
-      : "No disponible"}  AA ${profitabilityData[position.Symbol]?.asignacionActiva !== "No disponible" 
-      ? `${profitabilityData[position.Symbol]?.asignacionActiva}` 
-      : "No disponible"}`}
-  </Text>
-</DataTable.Cell>
+                    <Text style={[styles.numberText, { color: colors.text }]}>
+                      {`RT/ ${
+                        profitabilityData[position.Symbol]
+                          ?.rentabilidadTotal !== "No disponible"
+                          ? `${
+                              profitabilityData[position.Symbol]
+                                ?.rentabilidadTotal
+                            }%`
+                          : "No disponible"
+                      }  AA ${
+                        profitabilityData[position.Symbol]?.asignacionActiva !==
+                        "No disponible"
+                          ? `${
+                              profitabilityData[position.Symbol]
+                                ?.asignacionActiva
+                            }`
+                          : "No disponible"
+                      }`}
+                    </Text>
+                  </DataTable.Cell>
                   <DataTable.Cell style={styles.cell}>
                     <View
                       style={{ flexDirection: "row", alignItems: "center" }}
@@ -429,18 +447,8 @@ const SnackPositionTable: React.FC<SnackPositionTableProps> = ({
         >
           {selectedPosition && (
             <SnackPartialAdd
-              positionId={selectedPosition.Symbol}
-              onClose={() => {
-                console.log("📌 Cierre de modal y recarga de posiciones"); // 🔹 Log de verificación
-                setPlusModalVisible(false);
-                if (onUpdate) {
-                  onUpdate(); // ✅ Llama `onUpdate` solo si está definido
-                } else {
-                  console.warn(
-                    "⚠️ onUpdate no está definido en SnackPositionCard"
-                  );
-                }
-              }}
+              positionId={selectedPosition.id}
+              onClose={handleUpdateAfterPartialAdd} // ✅ Ahora usa la función corregida
             />
           )}
         </ScrollView>

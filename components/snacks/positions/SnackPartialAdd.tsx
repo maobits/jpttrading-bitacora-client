@@ -72,68 +72,70 @@ const SnackPartialAdd = ({ positionId, onClose }) => {
     setLoading(true);
 
     try {
-      const position = await PositionsService.getPositionById(positionId);
+        const position = await PositionsService.getPositionById(positionId);
 
-      const priceEntries = Array.isArray(
-        JSON.parse(position.PriceEntry || "[]")
-      )
-        ? JSON.parse(position.PriceEntry || "[]")
-        : [];
-      const activeAllocations = Array.isArray(
-        JSON.parse(position.ActiveAllocation || "[]")
-      )
-        ? JSON.parse(position.ActiveAllocation || "[]")
-        : [];
+        const priceEntries = Array.isArray(
+            JSON.parse(position.PriceEntry || "[]")
+        )
+            ? JSON.parse(position.PriceEntry || "[]")
+            : [];
+        const activeAllocations = Array.isArray(
+            JSON.parse(position.ActiveAllocation || "[]")
+        )
+            ? JSON.parse(position.ActiveAllocation || "[]")
+            : [];
 
-      const newId = getNextIncrementalId(priceEntries);
+        const newId = getNextIncrementalId(priceEntries);
 
-      const updatedPriceEntries = [
-        ...priceEntries,
-        {
-          id: newId,
-          price: priceEntry,
-          type: type,
-          date: new Date().toISOString(),
-        },
-      ];
+        const updatedPriceEntries = [
+            ...priceEntries,
+            {
+                id: newId,
+                price: priceEntry,
+                type: type,
+                date: new Date().toISOString(),
+            },
+        ];
 
-      const updatedActiveAllocations = [
-        ...activeAllocations,
-        {
-          id: newId,
-          activeAllocation,
-          type: type,
-          date: new Date().toISOString(),
-        },
-      ];
+        const updatedActiveAllocations = [
+            ...activeAllocations,
+            {
+                id: newId,
+                activeAllocation,
+                type: type,
+                date: new Date().toISOString(),
+            },
+        ];
 
-      const updatedData = {
-        PriceEntry: JSON.stringify(updatedPriceEntries),
-        ActiveAllocation: JSON.stringify(updatedActiveAllocations),
-      };
-      
-      if (type === "close") {
-        updatedData.State = false;  
-        updatedData.SavedPrice = priceEntry;
-        // 🔹 Cambia el estado de la posición a inactiva
-      }
-      
-      await PositionsService.updatePosition(positionId, updatedData);
+        const updatedData = {
+            PriceEntry: JSON.stringify(updatedPriceEntries),
+            ActiveAllocation: JSON.stringify(updatedActiveAllocations),
+        };
 
-      await PositionsService.updatePosition(positionId, {
-        PriceEntry: JSON.stringify(updatedPriceEntries),
-        ActiveAllocation: JSON.stringify(updatedActiveAllocations),
-      });
+        if (type === "close") {
+            updatedData.State = false;  
+            updatedData.SavedPrice = priceEntry;
+        }
 
-      onClose();
-      alert("Datos actualizados con éxito.");
+        // ✅ Esperar la actualización de la posición
+        await PositionsService.updatePosition(positionId, updatedData);
+
+        console.log("✅ Posición actualizada con éxito:", updatedData);
+
+        alert("Datos actualizados con éxito.");
+
+        // 🔄 Esperar antes de cerrar para asegurarse de que todo está sincronizado
+        setTimeout(() => {
+            onClose();
+        }, 500); // Espera 500ms para asegurarse de que la UI se actualiza antes de cerrar
     } catch (error) {
-      console.error("Error al actualizar la posición:", error);
-      alert("No se pudo actualizar la posición. Intente de nuevo.");
+        console.error("❌ Error al actualizar la posición:", error);
+        alert("No se pudo actualizar la posición. Intente de nuevo.");
     } finally {
-      setLoading(false);
+        setLoading(false);
     }
-  };
+};
+
 
   return (
     <KeyboardAvoidingView

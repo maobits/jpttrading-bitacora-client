@@ -46,12 +46,17 @@ const SnackPositionCard = ({ position, viewMode, onUpdate }) => {
 
   const [StatusPosition, setStatusPosition] = useState<string | null>(null);
 
-  const [totalReturnClosedPosition, setTotalReturnClosedPosition] = useState<string | null>(null);
+  const [totalReturnClosedPosition, setTotalReturnClosedPosition] = useState<
+    string | null
+  >(null);
 
   const [loading, setLoading] = useState<boolean>(true);
 
-  
-
+  const handleUpdateAfterPartialAdd = async () => {
+    console.log("📌 Recargando la página...");
+    setPlusModalVisible(false);
+    window.location.reload();
+};
 
 
   useEffect(() => {
@@ -66,12 +71,11 @@ const SnackPositionCard = ({ position, viewMode, onUpdate }) => {
       setAveragePrice(result?.estadoActual?.precioPromedio ?? "No disponible");
 
       setTotalReturnClosedPosition(
-        result?.historial?.find((item: any) => item.tipo === "cierre_total")?.rentabilidadTotal ?? "No disponible"
+        result?.historial?.find((item: any) => item.tipo === "cierre_total")
+          ?.rentabilidadTotal ?? "No disponible"
       );
-      
+
       setStatusPosition(position?.Status ?? "No disponible");
-
-
 
       setLoading(false);
     };
@@ -150,7 +154,6 @@ const SnackPositionCard = ({ position, viewMode, onUpdate }) => {
 
     parseDatabaseValues();
   }, [position.PriceEntry, position.ActiveAllocation]);
-
 
   return (
     <>
@@ -265,34 +268,34 @@ const SnackPositionCard = ({ position, viewMode, onUpdate }) => {
           </View>
           <Divider style={styles.divider} />
           <View style={styles.row}>
-    <MaterialIcons name="trending-up" size={20} color={colors.text} />
-    <Text style={[styles.label, { color: colors.text }]}>
-      Rentabilidad total:
-    </Text>
-    <Text style={[styles.value, { color: colors.text }]}>
-      {position.State
-        ? TotalProfitability !== null
-          ? `${TotalProfitability}%`
-          : "Cargando..."
-        : totalReturnClosedPosition !== null
-          ? `${totalReturnClosedPosition}%`
-          : "Cargando..."}
-    </Text>
-</View>
+            <MaterialIcons name="trending-up" size={20} color={colors.text} />
+            <Text style={[styles.label, { color: colors.text }]}>
+              Rentabilidad total:
+            </Text>
+            <Text style={[styles.value, { color: colors.text }]}>
+              {position.State
+                ? TotalProfitability !== null
+                  ? `${TotalProfitability}%`
+                  : "Cargando..."
+                : totalReturnClosedPosition !== null
+                ? `${totalReturnClosedPosition}%`
+                : "Cargando..."}
+            </Text>
+          </View>
 
-<View style={styles.row}>
-    <MaterialIcons name="trending-up" size={20} color={colors.text} />
-    <Text style={[styles.label, { color: colors.text }]}>
-      Asignación activa:
-    </Text>
-    <Text style={[styles.value, { color: colors.text }]}>
-      {position.State
-        ? activeAssignment !== null
-          ? `${activeAssignment}%`
-          : "Cargando..."
-        : "0%"}
-    </Text>
-</View>
+          <View style={styles.row}>
+            <MaterialIcons name="trending-up" size={20} color={colors.text} />
+            <Text style={[styles.label, { color: colors.text }]}>
+              Asignación activa:
+            </Text>
+            <Text style={[styles.value, { color: colors.text }]}>
+              {position.State
+                ? activeAssignment !== null
+                  ? `${activeAssignment}%`
+                  : "Cargando..."
+                : "0%"}
+            </Text>
+          </View>
 
           {/* Agregar el componente de rentabilidad después de la fecha de operación */}
 
@@ -371,34 +374,8 @@ const SnackPositionCard = ({ position, viewMode, onUpdate }) => {
         >
           <SnackPartialAdd
             positionId={position.id}
-            onClose={async () => {
-                console.log("📌 Cierre de modal y recarga de posiciones"); 
-                setPlusModalVisible(false);
-
-                // ✅ Volver a llamar a la calculadora después de cerrar el modal
-                setLoading(true);
-                const result = await fetchPositionProfitability(position);
-                setTotalProfitability(
-                    result?.estadoActual?.rentabilidadTotalActiva ?? "No disponible"
-                );
-                setActiveAssignment(
-                    result?.estadoActual?.porcentajeAsignacionActiva ?? "No disponible"
-                );
-                setAveragePrice(result?.estadoActual?.precioPromedio ?? "No disponible");
-                setTotalReturnClosedPosition(
-                    result?.historial?.find((item: any) => item.tipo === "cierre_total")?.rentabilidadTotal ?? "No disponible"
-                );
-                setStatusPosition(position?.Status ?? "No disponible");
-                setLoading(false);
-
-                // Llamar a `onUpdate` si está definido
-                if (onUpdate) {
-                    onUpdate();
-                } else {
-                    console.warn("⚠️ onUpdate no está definido en SnackPositionCard");
-                }
-            }}
-        />
+            onClose={handleUpdateAfterPartialAdd}
+          />
           <Button
             mode="contained"
             onPress={() => setPlusModalVisible(false)}

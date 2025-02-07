@@ -49,32 +49,31 @@ export default function ManagePositions() {
   const [showClosed, setShowClosed] = useState(false);
   const { user } = useAuth(); // Obtiene el usuario autenticado
 
-   
-
   const loadPositions = async () => {
     try {
-        console.log(`Loading ${showClosed ? "closed" : "open"} positions...`);
-        const data = showClosed
-            ? await PositionsService.getAllClosedPositions()
-            : await PositionsService.getAllPositions();
+      console.log(`Loading ${showClosed ? "closed" : "open"} positions...`);
+      const data = showClosed
+        ? await PositionsService.getAllClosedPositions()
+        : await PositionsService.getAllPositions();
 
-        setPositions(data.results);
-        console.log("Positions loaded:", data.results);
+      setPositions(data.results);
+      console.log("Positions loaded:", data.results);
 
-        // 📌 Llamamos la función para calcular el portafolio
-        const portfolioData = await fetchPortfolioProfitability(data);
-        
-        console.log("✅ Respuesta recibida del cálculo de portafolio:", portfolioData);
+      // 📌 Llamamos la función para calcular el portafolio
+      const portfolioData = await fetchPortfolioProfitability(data);
 
-        setPortfolioResult(portfolioData); // ✅ Guardar como objeto en el estado
+      console.log(
+        "✅ Respuesta recibida del cálculo de portafolio:",
+        portfolioData
+      );
 
+      setPortfolioResult(portfolioData); // ✅ Guardar como objeto en el estado
     } catch (error) {
-        console.error("❌ Error loading positions:", error);
+      console.error("❌ Error loading positions:", error);
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
-};
-
+  };
 
   useEffect(() => {
     setLoading(true); // Mostrar loader mientras se cargan los datos
@@ -84,6 +83,9 @@ export default function ManagePositions() {
   const handleNewPosition = async (newPosition: Position) => {
     setPositions((prevPositions) => [newPosition, ...prevPositions]);
     setModalVisible(false);
+    
+    // Recargar las posiciones y el rendimiento del portafolio
+    await loadPositions();
   };
 
   if (loading) {
@@ -134,23 +136,22 @@ export default function ManagePositions() {
           </View>
           {/* 📌 Sección donde mostramos el resultado del cálculo */}
           <View style={[styles.portfolioResultContainer]}>
-    <Text style={styles.portfolioResultTitle}>
-      📊 Portafolio
-    </Text>
+            <Text style={styles.portfolioResultTitle}>📊 Portafolio</Text>
 
-    <View style={styles.portfolioCard}>
-      <Text style={styles.portfolioResultValue}>
-        {showClosed
-          ? portfolioResult.historial && portfolioResult.historial.length > 0
-            ? `RTC: ${portfolioResult.estadoActual.rentabilidadTotalCerrada}%`
-            : "Sin datos"
-          : portfolioResult.estadoActual && portfolioResult.estadoActual.rentabilidadTotalActiva
-            ? `RTA: ${portfolioResult.estadoActual.rentabilidadTotalActiva}%`
-            : "Sin datos"}
-      </Text>
-    </View>
-  </View>
-
+            <View style={styles.portfolioCard}>
+              <Text style={styles.portfolioResultValue}>
+                {showClosed
+                  ? portfolioResult.historial &&
+                    portfolioResult.historial.length > 0
+                    ? `RTC: ${portfolioResult.estadoActual.rentabilidadTotalCerrada}%`
+                    : "Sin datos"
+                  : portfolioResult.estadoActual &&
+                    portfolioResult.estadoActual.rentabilidadTotalActiva
+                  ? `RTA: ${portfolioResult.estadoActual.rentabilidadTotalActiva}%`
+                  : "Sin datos"}
+              </Text>
+            </View>
+          </View>
         </View>
 
         {viewMode === "card" ? (
@@ -302,5 +303,4 @@ const styles = StyleSheet.create({
     textAlign: "center",
     paddingVertical: 2, // Menos padding
   },
-  
 });
