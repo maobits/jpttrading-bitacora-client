@@ -90,9 +90,13 @@ export default function ManagePositions() {
   const fetchClosedPositionsWithFilter = async () => {
     try {
       setLoading(true);
-      console.log(`Fetching closed positions with ${selectedMonths} months filter...`);
-  
-      const data = await PositionsService.getClosedPositionsWithFilter(selectedMonths);
+      console.log(
+        `Fetching closed positions with ${selectedMonths} months filter...`
+      );
+
+      const data = await PositionsService.getClosedPositionsWithFilter(
+        selectedMonths
+      );
       setFilteredClosedPositions(data.results);
     } catch (error) {
       console.error("❌ Error fetching filtered closed positions:", error);
@@ -101,14 +105,15 @@ export default function ManagePositions() {
       setLoading(false);
     }
   };
-  
+
   useEffect(() => {
     if (showClosed) {
-      console.log(`🔄 Cargando posiciones cerradas con filtro de ${selectedMonths} meses...`);
+      console.log(
+        `🔄 Cargando posiciones cerradas con filtro de ${selectedMonths} meses...`
+      );
       fetchClosedPositionsWithFilter();
     }
   }, [showClosed]); // Se ejecuta cuando showClosed cambia a true
-  
 
   useEffect(() => {
     setLoading(true); // Mostrar loader mientras se cargan los datos
@@ -141,23 +146,25 @@ export default function ManagePositions() {
       >
         <View style={styles.header}>
           <View style={styles.switchContainer}>
-          <View style={styles.switchGroup}>
-  <Text style={styles.switchLabel}>Estado:</Text>
-  <Switch
-    value={!showClosed}
-    onValueChange={() => setShowClosed((prev) => !prev)}
-    color={colors.primary}
-  />
-  {showClosed ? (
-    <TouchableOpacity onPress={() => setMonthsFilterModalVisible(true)}>
-      <Text style={[styles.switchText, styles.linkText]}>
-        {selectedMonths} {selectedMonths === 1 ? "mes" : "meses"}
-      </Text>
-    </TouchableOpacity>
-  ) : (
-    <Text style={styles.switchText}>Abiertas</Text>
-  )}
-</View>
+            <View style={styles.switchGroup}>
+              <Text style={styles.switchLabel}>Estado:</Text>
+              <Switch
+                value={!showClosed}
+                onValueChange={() => setShowClosed((prev) => !prev)}
+                color={colors.primary}
+              />
+              {showClosed ? (
+                <TouchableOpacity
+                  onPress={() => setMonthsFilterModalVisible(true)}
+                >
+                  <Text style={[styles.switchText, styles.linkText]}>
+                    {selectedMonths} {selectedMonths === 1 ? "mes" : "meses"}
+                  </Text>
+                </TouchableOpacity>
+              ) : (
+                <Text style={styles.switchText}>Abiertas</Text>
+              )}
+            </View>
 
             <View style={styles.switchGroup}>
               <Text style={styles.switchLabel}>Vista:</Text>
@@ -181,11 +188,11 @@ export default function ManagePositions() {
               <View style={styles.portfolioCard}>
                 <Text style={styles.portfolioResultValue}>
                   {showClosed
-                    ? portfolioResult?.historial?.length > 0
-                      ? `RTC: ${portfolioResult.estadoActual.rentabilidadTotalCerrada}%`
+                    ? portfolioResult?.estadoGeneral?.rentabilidadTotalCerrada
+                      ? `RTC: ${portfolioResult.estadoGeneral.rentabilidadTotalCerrada}%`
                       : "Sin datos"
-                    : portfolioResult?.estadoActual?.rentabilidadTotalActiva
-                    ? `RTA: ${portfolioResult.estadoActual.rentabilidadTotalActiva}%`
+                    : portfolioResult?.estadoGeneral?.rentabilidadTotalActiva
+                    ? `RTA: ${portfolioResult.estadoGeneral.rentabilidadTotalActiva}%`
                     : "Sin datos"}
                 </Text>
               </View>
@@ -213,12 +220,16 @@ export default function ManagePositions() {
           </View>
         ) : viewMode === "card" ? (
           <FlatList
-          data={showClosed ? filteredClosedPositions : positions}
-          renderItem={({ item }) => (
-            <SnackPositionCard position={item} viewMode={viewMode} onUpdate={loadPositions} />
-          )}
-          keyExtractor={(item) => item.id.toString()}
-        />
+            data={showClosed ? filteredClosedPositions : positions}
+            renderItem={({ item }) => (
+              <SnackPositionCard
+                position={item}
+                viewMode={viewMode}
+                onUpdate={loadPositions}
+              />
+            )}
+            keyExtractor={(item) => item.id.toString()}
+          />
         ) : (
           <SnackPositionTable
             positions={positions}
@@ -277,47 +288,50 @@ export default function ManagePositions() {
           </View>
         </Modal>
 
-
         <Modal
-  visible={monthsFilterModalVisible}
-  animationType="slide"
-  transparent={true} // 🔹 Hace que el fondo sea más estético
-  onRequestClose={() => setMonthsFilterModalVisible(false)}
->
-  <View style={styles.modalOverlay}>
-    <View style={styles.modalContainer}>
-      <Text style={styles.modalTitle}>Seleccionar Antigüedad</Text>
+          visible={monthsFilterModalVisible}
+          animationType="slide"
+          transparent={true} // 🔹 Hace que el fondo sea más estético
+          onRequestClose={() => setMonthsFilterModalVisible(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContainer}>
+              <Text style={styles.modalTitle}>Seleccionar Antigüedad</Text>
 
-      {/* 🔹 ScrollView permite desplazarse en caso de contenido extenso */}
-      <ScrollView style={styles.scrollContainer}>
-        {Array.from({ length: 12 }, (_, i) => i + 1).map((month) => (
-          <TouchableOpacity
-            key={month}
-            onPress={() => setSelectedMonths(month)}
-            style={[
-              styles.monthItem,
-              selectedMonths === month && styles.selectedMonthItem,
-            ]}
-          >
-            <Text
-              style={[
-                styles.monthItemText,
-                selectedMonths === month && styles.selectedMonthText,
-              ]}
-            >
-              {month} {month === 1 ? "mes" : "meses"}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+              {/* 🔹 ScrollView permite desplazarse en caso de contenido extenso */}
+              <ScrollView style={styles.scrollContainer}>
+                {Array.from({ length: 12 }, (_, i) => i + 1).map((month) => (
+                  <TouchableOpacity
+                    key={month}
+                    onPress={() => setSelectedMonths(month)}
+                    style={[
+                      styles.monthItem,
+                      selectedMonths === month && styles.selectedMonthItem,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.monthItemText,
+                        selectedMonths === month && styles.selectedMonthText,
+                      ]}
+                    >
+                      {month} {month === 1 ? "mes" : "meses"}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
 
-      {/* Botón para aplicar el filtro */}
-      <Button mode="contained" onPress={fetchClosedPositionsWithFilter} style={styles.applyButton}>
-        <Text style={styles.applyButtonText}>Aplicar Filtro</Text>
-      </Button>
-    </View>
-  </View>
-</Modal>
+              {/* Botón para aplicar el filtro */}
+              <Button
+                mode="contained"
+                onPress={fetchClosedPositionsWithFilter}
+                style={styles.applyButton}
+              >
+                <Text style={styles.applyButtonText}>Aplicar Filtro</Text>
+              </Button>
+            </View>
+          </View>
+        </Modal>
       </View>
     </Provider>
   );
@@ -540,6 +554,4 @@ const styles = StyleSheet.create({
     color: "#FFF",
     textAlign: "center",
   },
-
-  
 });

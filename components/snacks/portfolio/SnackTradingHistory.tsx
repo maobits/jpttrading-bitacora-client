@@ -4,26 +4,32 @@ import { Text, Card } from "react-native-paper";
 import { LineChart } from "react-native-chart-kit";
 import { useTheme } from "@/hooks/useThemeProvider";
 
-const SnackTradingHistory = ({ portfolioResult = {}, showClosed = false }) => {
+const SnackTradingHistory = ({ portfolioResult = {}, showClosed = false, cycle = "2025-02" }) => {
   const { colors } = useTheme();
-  const { estadoActual = {} } = portfolioResult;
+  const { groupedResults = {} } = portfolioResult;
+  const cycleData = groupedResults[cycle] || {}; // Extraemos los resultados del ciclo actual
+  const { estadoActual = {}, historial = [] } = cycleData;
 
   console.log("🔍 SnackTradingHistory Debug Log:");
   console.log("➡ portfolioResult:", portfolioResult);
+  console.log("➡ ciclo seleccionado:", cycle);
+  console.log("➡ cycleData:", cycleData);
   console.log("➡ estadoActual:", estadoActual);
   console.log("➡ showClosed:", showClosed);
 
+  // Verificamos si no hay datos en el ciclo actual
   if (!estadoActual || Object.keys(estadoActual).length === 0) {
-    console.warn("⚠ WARN: No data available in estadoActual!");
+    console.warn("⚠ WARN: No data available in estadoActual for the selected cycle!");
     return (
       <View style={styles.emptyContainer}>
         <Text style={[styles.emptyText, { color: colors.text_secondary }]}>
-         Portafolio no disponible.
+          No hay datos disponibles para este ciclo.
         </Text>
       </View>
     );
   }
 
+  // Cálculo de la rentabilidad según el tipo de vista (cerrada o activa)
   const rentabilidad = showClosed
     ? parseFloat(estadoActual?.rentabilidadTotalCerrada || "0")
     : parseFloat(estadoActual?.rentabilidadTotalActiva || "0");
@@ -36,6 +42,7 @@ const SnackTradingHistory = ({ portfolioResult = {}, showClosed = false }) => {
     to: colors.background_dark || "#000000",
   };
 
+  // Datos para el gráfico, mostrando el progreso entre "Inicio" y "Actual"
   const chartData = {
     labels: ["Inicio", "Actual"],
     datasets: [
@@ -83,9 +90,9 @@ const hexToRgb = (hex) => {
   if (!hex || typeof hex !== "string") {
     return "255, 255, 255";
   }
-  
+
   const cleanHex = hex.startsWith("#") ? hex.slice(1) : hex;
-  
+
   if (cleanHex.length !== 6) {
     return "255, 255, 255";
   }

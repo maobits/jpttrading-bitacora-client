@@ -14,6 +14,7 @@ interface PositionData {
     TradeDate: string;
     State: boolean;
     SavedPrice: string;
+    ClosingDate: string;  // Campo de la fecha de cierre
 }
 
 interface ApiResponse {
@@ -27,42 +28,53 @@ export async function fetchPortfolioProfitability(apiResponse: ApiResponse) {
         const serverConfig = config.isDevelopment ? config.development.server : config.production.server;
         const baseURL = `http://${serverConfig.ip}:${serverConfig.port}/portfolio-profitability`;
 
-        const requestData = apiResponse.results.map(position => {
-            if (!position.PriceEntry || !position.ActiveAllocation) {
-                console.warn(`⚠️ Datos faltantes en la posición ID: ${position.id}`);
-                return null;
-            }
-
-            let priceEntries, allocations;
-            try {
-                priceEntries = JSON.parse(position.PriceEntry);
-                allocations = JSON.parse(position.ActiveAllocation);
-
-                if (!Array.isArray(priceEntries) || !Array.isArray(allocations)) {
-                    console.error(`❌ Datos incorrectos en posición ID ${position.id}`);
+        // Validación y procesamiento de datos de las posiciones
+        const requestData = apiResponse.results
+            .map(position => {
+                if (!position.PriceEntry || !position.ActiveAllocation || !position.ClosingDate) {
+                    console.warn(`⚠️ Datos faltantes en la posición ID: ${position.id}`);
                     return null;
                 }
-            } catch (error) {
-                console.error(`❌ Error al parsear JSON en posición ID ${position.id}:`, error);
-                return null;
-            }
 
-            const tipoPosicion = position.TradeDirection === "Buy" ? "largo" : "corto";
-            const precioEntrada = parseFloat(priceEntries.find((entry: any) => entry.id === 1)?.price || "0");
-            const symbol = position.Symbol;
+                let priceEntries, allocations;
+                try {
+                    priceEntries = JSON.parse(position.PriceEntry);
+                    allocations = JSON.parse(position.ActiveAllocation);
 
-            const transacciones = priceEntries.slice(1).map((entry: any) => {
-                const allocation = allocations.find((alloc: any) => alloc.id === entry.id);
-                if (!allocation) return null;
+                    // Verificación de formato correcto
+                    if (!Array.isArray(priceEntries) || !Array.isArray(allocations)) {
+                        console.error(`❌ Datos incorrectos en posición ID ${position.id}`);
+                        return null;
+                    }
+                } catch (error) {
+                    console.error(`❌ Error al parsear JSON en posición ID ${position.id}:`, error);
+                    return null;
+                }
 
-                const porcentaje = allocation.activeAllocation ? parseFloat(allocation.activeAllocation) / 100 : 0;
-                const tipo = entry.type === "add" ? "adicion" : entry.type === "decrease" ? "toma_parcial" : "cierre_total";
-                
-                return { tipo, porcentaje, precio: parseFloat(entry.price) };
-            }).filter(Boolean);
+                const tipoPosicion = position.TradeDirection === "Buy" ? "largo" : "corto";
+                const precioEntrada = parseFloat(priceEntries.find((entry: any) => entry.id === 1)?.price || "0");
+                const symbol = position.Symbol;
 
-            return { tipoPosicion, precioEntrada, symbol, transacciones };
-        }).filter(Boolean);
+                const transacciones = priceEntries.slice(1).map((entry: any) => {
+                    const allocation = allocations.find((alloc: any) => alloc.id === entry.id);
+                    if (!allocation) return null;
+
+                    const porcentaje = allocation.activeAllocation ? parseFloat(allocation.activeAllocation) / 100 : 0;
+                    const tipo = entry.type === "add" ? "adicion" : entry.type === "decrease" ? "toma_parcial" : "cierre_total";
+
+                    return { tipo, porcentaje, precio: parseFloat(entry.price) };
+                }).filter(Boolean);
+
+                // Incluir fechaCierre en el objeto enviado
+                return { 
+                    tipoPosicion, 
+                    precioEntrada, 
+                    symbol, 
+                    transacciones, 
+                    fechaCierre: position.ClosingDate // Cambié `ClosingDate` a `fechaCierre`
+                };
+            })
+            .filter(Boolean);
 
         console.log("📤 Objeto generado antes de enviar:", JSON.stringify(requestData, null, 2));
 
