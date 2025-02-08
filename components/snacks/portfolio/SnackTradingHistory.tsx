@@ -22,7 +22,7 @@ const SnackTradingHistory = ({ portfolioResult = {}, showClosed = false, cycle =
     console.warn("⚠ WARN: No data available in estadoActual for the selected cycle!");
     return (
       <View style={styles.emptyContainer}>
-        <Text style={[styles.emptyText, { color: colors.text_secondary }]}>
+        <Text style={[styles.emptyText, { color: colors.text }]}>
           No hay datos disponibles para este ciclo.
         </Text>
       </View>
