@@ -14,7 +14,6 @@ const ENDPOINTS = IS_DEV_MODE
     POSITIONS: `http://${ip}:${port}/api/positions`,
     CLOSED_POSITIONS: `http://${ip}:${port}/api/positions/closed-positions`,
     CLOSED_POITIONS_WITH_FILTER: `http://${ip}:${port}/api/positions/closed-positions-with-filter`,
-    CREATE_POSITIONS: `http://${ip}:${port}/api/positions`,
 
     // Endpoints of the financial service.
     GET_COUTE: `http://${ip}:${port}/api/yfinance/quote/`,
