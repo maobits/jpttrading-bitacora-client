@@ -16,7 +16,7 @@ interface PositionData {
 export async function fetchPositionProfitability(position: PositionData) {
     try {
         const serverConfig = config.isDevelopment ? config.development.server : config.production.server;
-        const baseURL = `https://${serverConfig.ip}/procesar-transacciones`;
+        const baseURL = `http://${serverConfig.ip}:${serverConfig.port}/procesar-transacciones`;
 
         const priceEntries = JSON.parse(position.PriceEntry);
         const allocations = JSON.parse(position.ActiveAllocation);

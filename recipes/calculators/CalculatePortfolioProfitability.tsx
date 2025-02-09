@@ -26,7 +26,7 @@ export async function fetchPortfolioProfitability(apiResponse: ApiResponse) {
         console.log("📩 Datos de entrada crudos:", JSON.stringify(apiResponse, null, 2));
 
         const serverConfig = config.isDevelopment ? config.development.server : config.production.server;
-        const baseURL = `https://${serverConfig.ip}/portfolio-profitability`;
+        const baseURL = `http://${serverConfig.ip}:${serverConfig.port}/portfolio-profitability`;
 
         // Validación y procesamiento de datos de las posiciones
         const requestData = apiResponse.results

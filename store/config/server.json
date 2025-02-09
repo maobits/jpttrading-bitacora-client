@@ -1,5 +1,5 @@
 {
-    "isDevelopment": false,
+    "isDevelopment": true,
     "development": {
         "server": {
             "name": "JPTT-LOCALHOST",
