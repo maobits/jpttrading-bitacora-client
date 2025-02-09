@@ -131,7 +131,7 @@ getClosedPositionsWithFilter: async (months: number): Promise<any> => {
       console.log("🚀 Iniciando solicitud para crear una posición...");
 
       const { ip, port } = connectionService.getServerConfig();
-      apiClient.defaults.baseURL = `https://${ip}:${port}/api/positions`;
+      apiClient.defaults.baseURL = `http://${ip}:${port}/api/positions`;
 
       const token = await getSessionToken();
 
