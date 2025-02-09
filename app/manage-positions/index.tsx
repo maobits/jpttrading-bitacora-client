@@ -64,21 +64,28 @@ export default function ManagePositions() {
   const loadPositions = async () => {
     try {
       console.log(`Loading ${showClosed ? "closed" : "open"} positions...`);
-      const data = showClosed
-        ? await PositionsService.getAllClosedPositions()
-        : await PositionsService.getAllPositions();
-
+  
+      let data;
+  
+      if (showClosed) {
+        // Si está habilitada la opción de posiciones cerradas, aplicamos el filtro
+        data = await PositionsService.getClosedPositionsWithFilter(selectedMonths);
+      } else {
+        // Si no, cargamos las posiciones abiertas
+        data = await PositionsService.getAllPositions();
+      }
+  
       setPositions(data.results);
       console.log("Positions loaded:", data.results);
-
+  
       // 📌 Llamamos la función para calcular el portafolio
       const portfolioData = await fetchPortfolioProfitability(data);
-
+  
       console.log(
         "✅ Respuesta recibida del cálculo de portafolio:",
         portfolioData
       );
-
+  
       setPortfolioResult(portfolioData); // ✅ Guardar como objeto en el estado
     } catch (error) {
       console.error("❌ Error loading positions:", error);

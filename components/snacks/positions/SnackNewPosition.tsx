@@ -149,6 +149,7 @@ export default function SnackNewPosition({
         ActiveAllocation: addActiveAllocation(), // Almacenado como cadena JSON
         TradeDate: formData.tradeDate.toISOString().split("T")[0], // ✅ Guarda la fecha en formato YYYY-MM-DD
         State: true,
+        ClosingDate: formData.tradeDate.toISOString().split("T")[0], // ✅ Guarda la fecha en formato YYYY-MM-DD
       };
 
       const savedPosition = await PositionsService.createPosition(newPosition);
