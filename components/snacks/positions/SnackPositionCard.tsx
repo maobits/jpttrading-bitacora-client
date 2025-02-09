@@ -199,7 +199,7 @@ const SnackPositionCard = ({ position, viewMode, onUpdate }) => {
                   <TouchableOpacity
                     style={[
                       styles.plusButton,
-                      { backgroundColor: colors.primary },
+                      { backgroundColor: colors.primary, marginRight: 10},
                     ]}
                     onPress={() => setPlusModalVisible(true)}
                   >
@@ -364,8 +364,8 @@ const SnackPositionCard = ({ position, viewMode, onUpdate }) => {
           <Button
             mode="contained"
             onPress={() => setModalVisible(false)}
-            style={[styles.closeButton, { backgroundColor: colors.primary }]}
-            labelStyle={{ color: "#FFFFFF" }}
+            style={[styles.closeButton, {marginTop: 10, backgroundColor: colors.primary }]}
+            labelStyle={{ color: "#000" }}
           >
             Cerrar
           </Button>
@@ -392,8 +392,8 @@ const SnackPositionCard = ({ position, viewMode, onUpdate }) => {
           <Button
             mode="contained"
             onPress={() => setPlusModalVisible(false)}
-            style={[styles.closeButton, { backgroundColor: colors.primary }]}
-            labelStyle={{ color: "#FFFFFF" }}
+            style={[styles.closeButton, {marginTop: 10, backgroundColor: colors.primary }]}
+            labelStyle={{ color: "#000" }}
           >
             Cerrar
           </Button>
@@ -413,9 +413,11 @@ const SnackPositionCard = ({ position, viewMode, onUpdate }) => {
         >
           <SnackPositionReport data={positionData} />
           <Button
+           
             mode="contained"
             onPress={() => setHistoryModalVisible(false)}
-            style={{ marginTop: 10 }}
+            style={[styles.closeButton, {marginTop: 10, backgroundColor: colors.primary }]}
+            labelStyle={{ color: fonts.text_black }}
           >
             Cerrar
           </Button>

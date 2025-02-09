@@ -8,18 +8,6 @@ const FinancialReport = ({ data }) => {
 
   const { historial, estadoActual } = data;
 
-  // Datos para gráficos de evolución del precio de mercado
-  const marketPriceEvolutionData = {
-    labels: historial.map((_, index) => `Mov ${index + 1}`),
-    datasets: [
-      {
-        data: historial.map((item) => parseFloat(estadoActual.precioMercado) || 0),
-        color: (opacity = 1) => `rgba(34, 139, 230, ${opacity})`, // Azul
-        strokeWidth: 2,
-      },
-    ],
-  };
-
   // Datos para gráficos de rentabilidad
   const profitabilityData = {
     labels: ["Actual", "Cerrada", "Total"],
@@ -40,7 +28,7 @@ const FinancialReport = ({ data }) => {
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>📊 Reporte Financiero Avanzado</Text>
 
-      {/* Sección: Estado Actual - Etiqueta y Valor en una Misma Fila */}
+      {/* Sección: Estado Actual */}
       <Card style={styles.card}>
         <Text style={styles.sectionTitle}>📌 Estado Actual</Text>
         {Object.entries(estadoActual).map(([key, value], index) => (
@@ -51,7 +39,7 @@ const FinancialReport = ({ data }) => {
         ))}
       </Card>
 
-      {/* Sección: Historial de Movimientos con Alternancia de Colores */}
+      {/* Sección: Historial de Movimientos */}
       <Card style={styles.card}>
         <Text style={styles.sectionTitle}>🔄 Historial de Movimientos</Text>
         {historial.length > 0 ? (
@@ -71,19 +59,7 @@ const FinancialReport = ({ data }) => {
         )}
       </Card>
 
-      {/* Gráficos */}
-      <Card style={styles.chartContainer}>
-        <Text style={styles.sectionTitle}>📈 Evolución del Precio de Mercado</Text>
-        <LineChart
-          data={marketPriceEvolutionData}
-          width={Dimensions.get("window").width - 40}
-          height={220}
-          chartConfig={chartConfig}
-          bezier
-          style={styles.chart}
-        />
-      </Card>
-
+      {/* Gráfico: Rentabilidad */}
       <Card style={styles.chartContainer}>
         <Text style={styles.sectionTitle}>📊 Rentabilidad</Text>
         <LineChart
@@ -111,7 +87,7 @@ const chartConfig = {
   },
 };
 
-// Estilos mejorados con alternancia de colores y estado actual optimizado
+// Estilos
 const styles = StyleSheet.create({
   container: {
     padding: 16,

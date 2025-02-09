@@ -64,28 +64,30 @@ export default function ManagePositions() {
   const loadPositions = async () => {
     try {
       console.log(`Loading ${showClosed ? "closed" : "open"} positions...`);
-  
+
       let data;
-  
+
       if (showClosed) {
         // Si está habilitada la opción de posiciones cerradas, aplicamos el filtro
-        data = await PositionsService.getClosedPositionsWithFilter(selectedMonths);
+        data = await PositionsService.getClosedPositionsWithFilter(
+          selectedMonths
+        );
       } else {
         // Si no, cargamos las posiciones abiertas
         data = await PositionsService.getAllPositions();
       }
-  
+
       setPositions(data.results);
       console.log("Positions loaded:", data.results);
-  
+
       // 📌 Llamamos la función para calcular el portafolio
       const portfolioData = await fetchPortfolioProfitability(data);
-  
+
       console.log(
         "✅ Respuesta recibida del cálculo de portafolio:",
         portfolioData
       );
-  
+
       setPortfolioResult(portfolioData); // ✅ Guardar como objeto en el estado
     } catch (error) {
       console.error("❌ Error loading positions:", error);
@@ -219,8 +221,17 @@ export default function ManagePositions() {
             <Button
               mode="contained"
               onPress={loadPositions}
-              style={styles.reloadButton}
-              labelStyle={styles.reloadButtonText}
+              style={[
+                styles.reloadButton,
+                {
+                  backgroundColor: colors.primary,
+                  alignSelf: "center", // Centra el botón
+                  paddingHorizontal: 25, // Aumenta el espaciado lateral
+                  paddingVertical: 10, // Ajusta la altura del botón
+                  minWidth: 120, // Evita que el botón sea demasiado pequeño
+                },
+              ]}
+              labelStyle={[styles.reloadButtonText, { textAlign: "center" }]}
             >
               Actualizar
             </Button>
@@ -289,6 +300,8 @@ export default function ManagePositions() {
             <Button
               mode="contained"
               onPress={() => setHistoryModalVisible(false)}
+              style={[{ marginTop: 10, backgroundColor: colors.primary }]}
+              labelStyle={{ color: "#000" }}
             >
               Cerrar
             </Button>
@@ -449,12 +462,12 @@ const styles = StyleSheet.create({
     paddingVertical: 2, // Menos padding
   },
   reloadButton: {
-    backgroundColor: "#F29F05", // 📌 Color del portafolio
-    borderRadius: 8,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    marginTop: 10,
-    elevation: 3, // Sombra para resaltar el botón
+    alignSelf: "center", // Centra el botón
+    paddingHorizontal: 25, // Espaciado lateral sin afectar el ancho
+    paddingVertical: 10, // Ajuste de altura
+    minWidth: 120, // Ancho mínimo para evitar botones muy pequeños
+    maxWidth: 250, // Evita que el botón sea demasiado grande
+    width:300,
   },
 
   reloadButtonText: {
