@@ -10,7 +10,7 @@
     "production": {
         "server": {
             "name": "ProdServer",
-            "ip": "160.238.36.130",
+            "ip": "jpttrading-bitacora-server-1.onrender.com",
             "port": 3500
         }
     }

@@ -10,7 +10,7 @@
     "production": {
         "server": {
             "name": "ProdServer",
-            "ip": "160.238.36.130",
+            "ip": "profitability-calculator-1.onrender.com",
             "port": 3600
         }
     }
