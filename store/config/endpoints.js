@@ -41,7 +41,7 @@ const ENDPOINTS = IS_DEV_MODE
       GET_SEARCH: `https://${ip}/api/yfinance/search`,
 
       // Endpoints of the financial calculator service.
-      PORTFOLIO_PROFITABILITY: `https//${serverConfig.ip}/portfolio-profitability`,
+      PORTFOLIO_PROFITABILITY: `https://${serverConfig.ip}/portfolio-profitability`,
       POSITION_PROFITABILITY: `https://${serverConfig.ip}/procesar-transacciones`,
 
       // Authentication service endpoints.

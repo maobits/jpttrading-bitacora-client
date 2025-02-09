@@ -28,6 +28,7 @@ export async function fetchPortfolioProfitability(apiResponse: ApiResponse) {
 
         const serverConfig = config.isDevelopment ? config.development.server : config.production.server;
         const baseURL = ENDPOINTS.PORTFOLIO_PROFITABILITY;
+        console.log("URL para conectar con el servidor de calculo aritmetico y lógico:", baseURL);
 
         // Validación y procesamiento de datos de las posiciones
         const requestData = apiResponse.results
