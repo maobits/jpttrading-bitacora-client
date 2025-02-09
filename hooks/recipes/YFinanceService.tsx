@@ -62,7 +62,7 @@ const YFinanceService = {
       const { ip, port } = connectionService.getServerConfig();
       console.log("🌐 Configuración del servidor obtenida:", { ip, port });
 
-      const baseURL = `http://${ip}:${port}/api/yfinance/historical/${symbol}`;
+      const baseURL = `https://${ip}/api/yfinance/historical/${symbol}`;
       console.log(`🔗 Construyendo URL para la solicitud: ${baseURL}`);
 
       const response = await axios.get(baseURL, {
@@ -93,7 +93,7 @@ const YFinanceService = {
       const { ip, port } = connectionService.getServerConfig();
       console.log("🌐 Configuración del servidor obtenida:", { ip, port });
 
-      const baseURL = `http://${ip}:${port}/api/yfinance/search`;
+      const baseURL = `https://${ip}/api/yfinance/search`;
       console.log(`🔗 Construyendo URL para la búsqueda: ${baseURL}`);
 
       const response = await axios.get(baseURL, {
