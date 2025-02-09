@@ -2,6 +2,7 @@ import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import GeneralToken from "@/store/config/GeneralToken.json";
 import connectionService from "@/hooks/recipes/ConnectionService"; // Importa el servicio de conexión
+import ENDPOINTS from "@/store/config/endpoints";
 
 // Configurar cliente de Axios dinámicamente
 const apiClient = axios.create({
@@ -45,7 +46,7 @@ const PositionsService = {
       );
 
       const { ip, port } = connectionService.getServerConfig();
-      apiClient.defaults.baseURL = `http://${ip}:${port}/api/positions`;
+      apiClient.defaults.baseURL = ENDPOINTS.POSITIONS;
 
       const token = getGeneralToken();
 
@@ -71,7 +72,7 @@ const PositionsService = {
       );
 
       const { ip, port } = connectionService.getServerConfig();
-      apiClient.defaults.baseURL = `https://${ip}:${port}/api/positions/closed-positions`;
+      apiClient.defaults.baseURL = ENDPOINTS.CLOSED_POSITIONS;
 
       const token = getGeneralToken();
 
@@ -96,7 +97,7 @@ getClosedPositionsWithFilter: async (months: number): Promise<any> => {
     );
 
     const { ip, port } = connectionService.getServerConfig();
-    apiClient.defaults.baseURL = `https://${ip}:${port}/api/positions/closed-positions-with-filter`;
+    apiClient.defaults.baseURL = ENDPOINTS.CLOSED_POITIONS_WITH_FILTER;
 
     const token = getGeneralToken();
 
@@ -131,7 +132,7 @@ getClosedPositionsWithFilter: async (months: number): Promise<any> => {
       console.log("🚀 Iniciando solicitud para crear una posición...");
 
       const { ip, port } = connectionService.getServerConfig();
-      apiClient.defaults.baseURL = `http://${ip}:${port}/api/positions`;
+      apiClient.defaults.baseURL = ENDPOINTS.CREATE_POSITIONS;
 
       const token = await getSessionToken();
 
@@ -157,7 +158,7 @@ getClosedPositionsWithFilter: async (months: number): Promise<any> => {
       );
 
       const { ip, port } = connectionService.getServerConfig();
-      apiClient.defaults.baseURL = `https://${ip}:${port}/api/positions`;
+      apiClient.defaults.baseURL = ENDPOINTS.POSITIONS;
 
       const token = getGeneralToken();
 
@@ -189,7 +190,7 @@ getClosedPositionsWithFilter: async (months: number): Promise<any> => {
       );
 
       const { ip, port } = connectionService.getServerConfig();
-      apiClient.defaults.baseURL = `https://${ip}:${port}/api/positions`;
+      apiClient.defaults.baseURL = ENDPOINTS.POSITIONS;
 
       const token = await getSessionToken();
 
@@ -218,7 +219,7 @@ getClosedPositionsWithFilter: async (months: number): Promise<any> => {
       );
 
       const { ip, port } = connectionService.getServerConfig();
-      apiClient.defaults.baseURL = `http://${ip}:${port}/api/positions`;
+      apiClient.defaults.baseURL = ENDPOINTS.POSITIONS;
 
       const token = await getSessionToken();
 

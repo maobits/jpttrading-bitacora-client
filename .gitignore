@@ -1,3 +1,8 @@
+# Ignorar archivos específicos
+store/config/endpoints.js
+store/config/server.json
+store/config/calculatorServer.json
+
 # Node.js dependencies
 node_modules/
 npm-debug.log*

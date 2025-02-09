@@ -1,6 +1,7 @@
 import axios from "axios";
 import connectionService from "@/hooks/recipes/ConnectionService";
 import GeneralToken from "@/store/config/GeneralToken.json"; // Importa el token general
+import ENDPOINTS from "@/store/config/endpoints";
 
 interface StockData {
   symbol: string;
@@ -27,7 +28,7 @@ const YFinanceService = {
       const { ip, port } = connectionService.getServerConfig();
       console.log("🌐 Configuración del servidor obtenida:", { ip, port });
 
-      const baseURL = `http://${ip}:${port}/api/yfinance/quote/${symbol}`;
+      const baseURL = ENDPOINTS.GET_COUTE + symbol;
       console.log(`🔗 Construyendo URL para la solicitud: ${baseURL}`);
 
       const response = await axios.get(baseURL, {
@@ -62,7 +63,7 @@ const YFinanceService = {
       const { ip, port } = connectionService.getServerConfig();
       console.log("🌐 Configuración del servidor obtenida:", { ip, port });
 
-      const baseURL = `http://${ip}:${port}/api/yfinance/historical/${symbol}`;
+      const baseURL = ENDPOINTS.GET_HISTORICAL + symbol;
       console.log(`🔗 Construyendo URL para la solicitud: ${baseURL}`);
 
       const response = await axios.get(baseURL, {
@@ -93,7 +94,7 @@ const YFinanceService = {
       const { ip, port } = connectionService.getServerConfig();
       console.log("🌐 Configuración del servidor obtenida:", { ip, port });
 
-      const baseURL = `http://${ip}:${port}/api/yfinance/search`;
+      const baseURL = ENDPOINTS.GET_SEARCH;
       console.log(`🔗 Construyendo URL para la búsqueda: ${baseURL}`);
 
       const response = await axios.get(baseURL, {

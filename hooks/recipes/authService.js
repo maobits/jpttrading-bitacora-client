@@ -2,6 +2,7 @@ import React, { useState, createContext, useContext, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import connectionService from "@/hooks/recipes/ConnectionService"; // Importar instancia del servicio
 import axios from "axios"; // Asegúrate de instalar axios
+import ENDPOINTS from "@/store/config/endpoints";
 
 const AuthContext = createContext();
 
@@ -34,7 +35,7 @@ export const AuthProvider = ({ children }) => {
     const login = async (username, token) => {
         console.log("🔄 Iniciando sesión...");
         const { ip, port } = connectionService.getServerConfig(); // Obtiene configuración del servidor
-        const baseUrl = `http://${ip}:${port}/api/positions/login`;
+        const baseUrl = ENDPOINTS.LOGIN;
 
         console.log("ℹ️ Configuración del servidor obtenida:", { ip, port, baseUrl });
         console.log("🔑 Enviando solicitud al servidor con token:", token);
