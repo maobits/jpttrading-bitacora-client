@@ -389,14 +389,7 @@ const SnackPositionCard = ({ position, viewMode, onUpdate }) => {
             positionId={position.id}
             onClose={handleUpdateAfterPartialAdd}
           />
-          <Button
-            mode="contained"
-            onPress={() => setPlusModalVisible(false)}
-            style={[styles.closeButton, {marginTop: 10, backgroundColor: colors.primary }]}
-            labelStyle={{ color: "#000" }}
-          >
-            Cerrar
-          </Button>
+          
         </ScrollView>
       </Modal>
 

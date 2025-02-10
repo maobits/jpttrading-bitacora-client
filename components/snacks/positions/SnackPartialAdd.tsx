@@ -19,6 +19,7 @@ import {
 import { useTheme } from "@/hooks/useThemeProvider";
 import PositionsService from "@/hooks/recipes/PositionService";
 import { DatePickerModal } from "react-native-paper-dates";
+import SnackUpdatePosition from "./SnackUpdatePosition";
 
 const SnackPartialAdd = ({ positionId, onClose }) => {
   const { colors, fonts } = useTheme();
@@ -35,6 +36,8 @@ const SnackPartialAdd = ({ positionId, onClose }) => {
     new Date()
   );
   const [datePickerVisible, setDatePickerVisible] = useState(false);
+  const [editModalVisible, setEditModalVisible] = useState(false);
+
 
   const validateFields = () => {
     let isValid = true;
@@ -146,27 +149,33 @@ const SnackPartialAdd = ({ positionId, onClose }) => {
   };
 
   return (
+
+    <>
+
+    {/* ✅ Modal para Editar la Posición */}
+    <SnackUpdatePosition
+        visible={editModalVisible}
+        positionId={positionId}
+        onClose={() => setEditModalVisible(false)}
+      />
+    
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : undefined}
       style={[styles.container, { backgroundColor: "#FFFFFF" }]}
     >
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <Card style={[styles.card, { backgroundColor: colors.surface }]}>
-          <Card.Title
-            title="Añadir Datos Parciales"
-            titleStyle={[
-              styles.title,
-              { color: colors.primary, fontFamily: fonts.Raleway.bold },
-            ]}
-            right={() => (
-              <IconButton
-                icon="close"
-                color={colors.primary}
-                size={24}
-                onPress={onClose}
-              />
-            )}
-          />
+        <Card.Title
+  title="Añadir Datos Parciales"
+  titleStyle={[styles.title, { color: colors.primary, fontFamily: fonts.Raleway.bold }]}
+  right={() => (
+    <View style={{ flexDirection: "row" }}>
+      <IconButton icon="pencil" color={colors.primary} size={24} onPress={() => setEditModalVisible(true)} />
+      <IconButton icon="close" color={colors.primary} size={24} onPress={onClose} />
+    </View>
+  )}
+/>
+
         </Card>
 
         <View style={{ marginBottom: 20 }}>
@@ -283,6 +292,7 @@ const SnackPartialAdd = ({ positionId, onClose }) => {
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
+    </>
   );
 };
 

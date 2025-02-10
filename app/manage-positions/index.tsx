@@ -191,7 +191,16 @@ export default function ManagePositions() {
             </View>
           </View>
 
-          <TouchableOpacity onPress={() => setHistoryModalVisible(true)}>
+          <TouchableOpacity
+            onPress={() => {
+              console.log("📊 Abriendo historial del portafolio...");
+              console.log(
+                "➡ Datos actuales de portfolioResult:",
+                portfolioResult
+              );
+              setHistoryModalVisible(true);
+            }}
+          >
             <View style={[styles.portfolioResultContainer]}>
               <Text style={styles.portfolioResultTitle}>📊 Portafolio</Text>
               <View style={styles.portfolioCard}>
@@ -467,7 +476,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10, // Ajuste de altura
     minWidth: 120, // Ancho mínimo para evitar botones muy pequeños
     maxWidth: 250, // Evita que el botón sea demasiado grande
-    width:300,
+    width: 300,
   },
 
   reloadButtonText: {

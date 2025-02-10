@@ -323,10 +323,13 @@ const SnackPositionTable: React.FC<SnackPositionTableProps> = ({
                     </Text>
                   </DataTable.Cell>
                   <DataTable.Cell style={styles.cell}>
-                    <Text style={[styles.numberText, { color: colors.text }]}>
-                      {averagePrice}
-                    </Text>
-                  </DataTable.Cell>
+  <Text style={[styles.numberText, { color: colors.text }]}>
+    {profitabilityData[position.Symbol]?.precioPromedio
+      ? formatCurrency(parseFloat(profitabilityData[position.Symbol]?.precioPromedio))
+      : "No disponible"}
+  </Text>
+</DataTable.Cell>
+
                   <DataTable.Cell style={styles.cell}>
                     <Text style={[styles.numberText, { color: colors.text }]}>
                       {formatCurrency(currentPrices[position.Symbol] || 0)}
