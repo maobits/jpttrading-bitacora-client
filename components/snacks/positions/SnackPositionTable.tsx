@@ -238,6 +238,7 @@ const SnackPositionTable: React.FC<SnackPositionTableProps> = ({
 
   return (
     <>
+    <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 }}>
       <ScrollView
   horizontal
   style={{ flex: 1 }} // ✅ Permite que el ScrollView ocupe todo el alto disponible
@@ -434,7 +435,7 @@ const SnackPositionTable: React.FC<SnackPositionTableProps> = ({
                           { color: colors.primary },
                         ]}
                       >
-                        Historial
+                       {position.Symbol}
                       </Button>
                       {user && (
                         <IconButton
@@ -451,6 +452,7 @@ const SnackPositionTable: React.FC<SnackPositionTableProps> = ({
             })}
           </DataTable>
         </View>
+      </ScrollView>
       </ScrollView>
 
       {/* Modal Historial */}
@@ -533,6 +535,7 @@ const SnackPositionTable: React.FC<SnackPositionTableProps> = ({
           </Button>
         </ScrollView>
       </Modal>
+
     </>
   );
 };
