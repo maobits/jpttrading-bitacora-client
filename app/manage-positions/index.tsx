@@ -8,16 +8,7 @@ import {
   TouchableOpacity,
   ScrollView,
 } from "react-native";
-import {
-  Text,
-  Switch,
-  FAB,
-  Portal,
-  Provider,
-  IconButton,
-  Button,
-  List,
-} from "react-native-paper";
+import { Text, Switch, FAB, Portal, Provider, List } from "react-native-paper";
 import { useTheme } from "@/hooks/useThemeProvider";
 import PositionsService from "@/hooks/recipes/PositionService";
 import SnackPositionCard from "@/components/snacks/positions/SnackPositionCard";
@@ -29,6 +20,7 @@ import { fetchPortfolioProfitability } from "@/recipes/calculators/CalculatePort
 import LottieException from "@/components/snacks/animations/LottieException";
 import SnackTradingHistory from "@/components/snacks/portfolio/SnackTradingHistory";
 import { useWindowDimensions } from "react-native";
+import { Button, IconButton } from "react-native-paper";
 
 // Define the Position type
 interface Position {
@@ -98,8 +90,7 @@ export default function ManagePositions() {
   };
 
   const { width } = useWindowDimensions(); // 📌 Obtiene el ancho de la pantalla
-const numColumns = width < 600 ? 1 : width < 900 ? 2 : 3; // 📌 Móvil: 1 columna, Tablet: 2, Pantallas grandes: 3
-
+  const numColumns = width < 600 ? 1 : width < 900 ? 2 : 3; // 📌 Móvil: 1 columna, Tablet: 2, Pantallas grandes: 3
 
   const fetchClosedPositionsWithFilter = async () => {
     try {
@@ -179,7 +170,17 @@ const numColumns = width < 600 ? 1 : width < 900 ? 2 : 3; // 📌 Móvil: 1 colu
                 <Text style={styles.switchText}>Abiertas</Text>
               )}
             </View>
-
+            {/* 📌 Botón de Actualización */}
+            <Button
+              mode="contained"
+              onPress={loadPositions} // Llama la función cuando se presiona
+              icon="refresh" // Icono de actualización
+              style={styles.refreshButton} // Estilos personalizados
+              labelStyle={styles.refreshButtonText}
+            >
+              Actualizar
+            </Button>{" "}
+            {/* 📌 Botón de Actualización */}
             {/*<View style={styles.switchGroup}>
               <Text style={styles.switchLabel}>Vista:</Text>
               <Switch
@@ -234,38 +235,85 @@ const numColumns = width < 600 ? 1 : width < 900 ? 2 : 3; // 📌 Móvil: 1 colu
             </Text>
             <Button
               mode="contained"
-              onPress={loadPositions}
-              style={[
-                styles.reloadButton,
-                {
-                  backgroundColor: colors.primary,
-                  alignSelf: "center", // Centra el botón
-                  paddingHorizontal: 25, // Aumenta el espaciado lateral
-                  paddingVertical: 10, // Ajusta la altura del botón
-                  minWidth: 120, // Evita que el botón sea demasiado pequeño
-                },
-              ]}
-              labelStyle={[styles.reloadButtonText, { textAlign: "center" }]}
+              onPress={() => {
+                console.log("🔄 Recargando la página...");
+                window.location.reload(); // 🔹 Esto recarga la página completamente
+              }}
+              icon="refresh"
+              style={styles.refreshButton}
+              labelStyle={styles.refreshButtonText}
+            >
+              Actualizar
+            </Button>
+            <Button
+              mode="contained"
+              onPress={() => {
+                console.log("🔄 Recargando la página...");
+                window.location.reload(); // 🔹 Esto recarga la página completamente
+              }}
+              icon="refresh"
+              style={styles.refreshButton}
+              labelStyle={styles.refreshButtonText}
+            >
+              Actualizar
+            </Button>
+            <Button
+              mode="contained"
+              onPress={() => {
+                console.log("🔄 Recargando la página...");
+                window.location.reload(); // 🔹 Esto recarga la página completamente
+              }}
+              icon="refresh"
+              style={styles.refreshButton}
+              labelStyle={styles.refreshButtonText}
+            >
+              Actualizar
+            </Button>
+            <Button
+              mode="contained"
+              onPress={() => {
+                console.log("🔄 Recargando la página...");
+                window.location.reload(); // 🔹 Esto recarga la página completamente
+              }}
+              icon="refresh"
+              style={styles.refreshButton}
+              labelStyle={styles.refreshButtonText}
+            >
+              Actualizar
+            </Button>
+            <Button
+              mode="contained"
+              onPress={() => {
+                console.log("🔄 Recargando la página...");
+                window.location.reload(); // 🔹 Esto recarga la página completamente
+              }}
+              icon="refresh"
+              style={styles.refreshButton}
+              labelStyle={styles.refreshButtonText}
             >
               Actualizar
             </Button>
           </View>
         ) : viewMode === "card" ? (
           <FlatList
-  key={`flatlist-${numColumns}`} // 🔹 Fuerza un re-render cuando numColumns cambia
-  data={showClosed ? filteredClosedPositions : positions}
-  renderItem={({ item }) => (
-    <SnackPositionCard
-      position={item}
-      viewMode={viewMode}
-      onUpdate={loadPositions}
-    />
-  )}
-  keyExtractor={(item) => item.id.toString()}
-  numColumns={numColumns} // ✅ Se mantiene dinámico
-  columnWrapperStyle={numColumns > 1 ? { justifyContent: "space-between", paddingHorizontal: 8 } : undefined}
-  contentContainerStyle={{ paddingHorizontal: 8 }}
-/>
+            key={`flatlist-${numColumns}`} // 🔹 Fuerza un re-render cuando numColumns cambia
+            data={showClosed ? filteredClosedPositions : positions}
+            renderItem={({ item }) => (
+              <SnackPositionCard
+                position={item}
+                viewMode={viewMode}
+                onUpdate={loadPositions}
+              />
+            )}
+            keyExtractor={(item) => item.id.toString()}
+            numColumns={numColumns} // ✅ Se mantiene dinámico
+            columnWrapperStyle={
+              numColumns > 1
+                ? { justifyContent: "space-between", paddingHorizontal: 8 }
+                : undefined
+            }
+            contentContainerStyle={{ paddingHorizontal: 8 }}
+          />
         ) : (
           <SnackPositionTable
             positions={positions}
@@ -607,5 +655,17 @@ const styles = StyleSheet.create({
     padding: 15,
     margin: 10, // Espaciado entre tarjetas
     elevation: 3,
+  },
+  refreshButton: {
+    backgroundColor: "#F29F05", // Color amarillo
+    marginTop: 10, // Espaciado debajo del switch
+    paddingHorizontal: 15, // Espaciado interno lateral
+    borderRadius: 10, // Bordes redondeados
+  },
+
+  refreshButtonText: {
+    color: "#0C0C0C", // Texto negro
+    fontFamily: "Montserrat-Bold", // Fuente en negrita
+    fontSize: 14, // Tamaño del texto
   },
 });
