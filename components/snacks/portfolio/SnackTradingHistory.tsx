@@ -23,7 +23,7 @@ const SnackTradingHistory = ({ portfolioResult = {}, showClosed = false }) => {
   console.log("🔍 Debug: Ciclos detectados ->", Object.keys(groupedResults));
 
   // 📊 Extraer y procesar datos de todos los ciclos
-  const ciclos = Object.keys(groupedResults);
+  const ciclos = Object.keys(groupedResults).sort((a, b) => b.localeCompare(a));
   const rentabilidades = [];
   const etiquetasCiclos = [];
 
