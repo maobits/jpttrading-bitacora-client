@@ -96,7 +96,13 @@ const SnackPositionTable: React.FC<SnackPositionTableProps> = ({
           ? result?.estadoActual?.porcentajeAsignacionActiva ?? "No disponible"
           : "0%";
 
-        results[position.Symbol] = { rentabilidadTotal, asignacionActiva };
+        // Obtener el precio promedio
+        const precioPromedio = position.State
+          ? result?.estadoActual?.precioPromedio ?? "No disponible"
+          : result?.historial?.find((item: any) => item.tipo === "cierre_total")
+              ?.precioPromedio ?? "No disponible";
+
+        results[position.Symbol] = { rentabilidadTotal, asignacionActiva, precioPromedio };
       }
 
       setProfitabilityData(results);
@@ -104,6 +110,7 @@ const SnackPositionTable: React.FC<SnackPositionTableProps> = ({
 
     fetchProfitability();
   }, [positions]);
+
 
   const fetchCurrentPrice = async (symbol: string) => {
     try {
@@ -232,12 +239,14 @@ const SnackPositionTable: React.FC<SnackPositionTableProps> = ({
   return (
     <>
       <ScrollView
-        horizontal
-        contentContainerStyle={{
-          width: "100%",
-          paddingHorizontal: 10,
-        }}
-      >
+  horizontal
+  style={{ flex: 1 }} // ✅ Permite que el ScrollView ocupe todo el alto disponible
+  contentContainerStyle={{
+    width: "100%",
+    paddingHorizontal: 10,
+    flexGrow: 1, // ✅ Evita que el contenido se colapse y permite el uso de flex
+  }}
+>
         <View
           style={{
             minWidth: screenWidth < 600 ? screenWidth * 1.2 : "100%",

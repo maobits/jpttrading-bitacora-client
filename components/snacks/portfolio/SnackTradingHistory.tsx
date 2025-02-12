@@ -91,30 +91,30 @@ const SnackTradingHistory = ({ portfolioResult = {}, showClosed = false }) => {
         </View>
       )}
 
-      {/* 📋 Lista de ciclos con detalles */}
-      {ciclos.map((cycle) => {
-        const { estadoActual = {} } = groupedResults[cycle];
-        return (
-          <Card key={cycle} style={[styles.card, { backgroundColor: colors.surface }]}>
-            <Card.Title title={`📅 Ciclo: ${cycle}`} titleStyle={styles.cardTitle} />
-            <Card.Content>
-              <Text style={styles.detailsText}>
-                📌 Precio de Mercado: <Text style={styles.boldText}>${estadoActual.precioMercado}</Text>
-              </Text>
-              <Text style={styles.detailsText}>
-                🏷 Precio Promedio: <Text style={styles.boldText}>${estadoActual.precioPromedio}</Text>
-              </Text>
-              <Text style={styles.detailsText}>
-                📊 Rentabilidad Activa: <Text style={styles.boldText}>{estadoActual.rentabilidadTotalActiva}%</Text>
-              </Text>
-              <Text style={styles.detailsText}>
-                🔄 Rentabilidad Acumulada de Tomas:{" "}
-                <Text style={styles.boldText}>{estadoActual.rentabilidadAcumuladaTomas}%</Text>
-              </Text>
-            </Card.Content>
-          </Card>
-        );
-      })}
+{showClosed &&
+  ciclos.map((cycle) => {
+    const { estadoActual = {} } = groupedResults[cycle];
+    return (
+      <Card key={cycle} style={[styles.card, { backgroundColor: colors.surface }]}>
+        <Card.Title title={`📅 Ciclo: ${cycle}`} titleStyle={styles.cardTitle} />
+        <Card.Content>
+          <Text style={styles.detailsText}>
+            📌 Precio de Mercado: <Text style={styles.boldText}>${estadoActual.precioMercado}</Text>
+          </Text>
+          <Text style={styles.detailsText}>
+            🏷 Precio Promedio: <Text style={styles.boldText}>${estadoActual.precioPromedio}</Text>
+          </Text>
+          <Text style={styles.detailsText}>
+            📊 Rentabilidad Activa: <Text style={styles.boldText}>{estadoActual.rentabilidadTotalActiva}%</Text>
+          </Text>
+          <Text style={styles.detailsText}>
+            🔄 Rentabilidad Acumulada de Tomas:{" "}
+            <Text style={styles.boldText}>{estadoActual.rentabilidadAcumuladaTomas}%</Text>
+          </Text>
+        </Card.Content>
+      </Card>
+    );
+  })}
     </ScrollView>
   );
 };

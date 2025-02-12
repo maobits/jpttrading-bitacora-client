@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import {
   View,
   StyleSheet,
@@ -15,8 +15,7 @@ import SnackPartialAdd from "./SnackPartialAdd"; // Asegúrate de que este compo
 import { useAuth } from "@/hooks/recipes/authService"; // ✅ Importar la autenticación
 import { fetchPositionProfitability } from "@/recipes/calculators/PositionProfitabilityCalculator";
 import SnackPositionReport from "./SnackPositionReport";
-
-
+import { useWindowDimensions } from "react-native";
 
 // Helper para formatear valores en dólares americanos
 const formatCurrency = (value) => {
@@ -64,10 +63,30 @@ const SnackPositionCard = ({ position, viewMode, onUpdate }) => {
     window.location.reload();
   };
 
+  // 📌 Usamos useMemo para asegurarnos de que numColumns cambia dinámicamente
+
+  const { width } = useWindowDimensions(); // 📌 Obtiene el ancho de la pantalla
+
+  const numColumns =
+    width < 480 ? 1   // Móviles pequeños
+  : width < 768 ? 2   // Teléfonos grandes / Tablets pequeñas
+  : width < 1024 ? 3  // Tablets medianas
+  : width < 1440 ? 4  // Laptops y monitores 1080p
+  : width < 2560 ? 5  // Monitores 2K
+  : 6; // ✅ Monitores 4K (3840x2160) tendrán **6 columnas**
+
+  const margin = 6; // 📌 Margen reducido para que más tarjetas encajen sin exceso de espacio
+  const totalMargin = margin * (numColumns + 1); // 📌 Cálculo preciso del espacio total ocupado por los márgenes
+  
+  const cardWidth = numColumns === 1 
+    ? width * 0.75 // 📌 En móviles, la tarjeta ocupa el 95% del ancho total para que no se desborde
+    : (width - totalMargin) / numColumns; // 📌 Divide el ancho total disponible entre las columnas sin desperdiciar espacio
+  
+ 
   useEffect(() => {
     const obtenerRentabilidad = async () => {
       const result = await fetchPositionProfitability(position);
-      
+
       setPositionData(result);
 
       setTotalProfitability(
@@ -165,7 +184,19 @@ const SnackPositionCard = ({ position, viewMode, onUpdate }) => {
 
   return (
     <>
-      <Card style={[styles.card, { backgroundColor: colors.background }]}>
+      <Card
+        style={[
+          styles.card,
+          {
+            backgroundColor: colors.background,
+            width: cardWidth * 1.1, // 🔹 Aumentamos el ancho en un 10% adicional
+            maxWidth: 400, // 🔹 Evita que se hagan demasiado grandes
+            marginHorizontal: 2, // 🔹 Reduce el margen entre tarjetas
+            marginVertical: 4, // 🔹 Espaciado vertical más compacto
+            alignSelf: "center",
+          },
+        ]}
+      >
         <Card.Title
           title={position.Symbol}
           titleStyle={{
@@ -199,7 +230,7 @@ const SnackPositionCard = ({ position, viewMode, onUpdate }) => {
                   <TouchableOpacity
                     style={[
                       styles.plusButton,
-                      { backgroundColor: colors.primary, marginRight: 10},
+                      { backgroundColor: colors.primary, marginRight: 10 },
                     ]}
                     onPress={() => setPlusModalVisible(true)}
                   >
@@ -221,7 +252,7 @@ const SnackPositionCard = ({ position, viewMode, onUpdate }) => {
               Precio de Entrada:
             </Text>
             <Text style={[styles.value, { color: colors.text }]}>
-              {entryPrice}
+              ${entryPrice}
             </Text>
           </View>
           <View style={styles.row}>
@@ -231,7 +262,7 @@ const SnackPositionCard = ({ position, viewMode, onUpdate }) => {
             </Text>
             <Text style={[styles.value, { color: colors.text }]}>
               {" "}
-              {AveragePrice !== null ? `${AveragePrice}` : "¡No disponible!"}
+              ${AveragePrice !== null ? `${AveragePrice}` : "¡No disponible!"}
             </Text>
           </View>
           <View style={styles.row}>
@@ -308,34 +339,33 @@ const SnackPositionCard = ({ position, viewMode, onUpdate }) => {
           {/* Agregar el componente de rentabilidad después de la fecha de operación */}
 
           <TouchableOpacity onPress={() => setHistoryModalVisible(true)}>
-  <View
-    style={{
-      backgroundColor: isBuy ? colors.primary : colors.secondary,
-      borderRadius: 4,
-      paddingVertical: 2,
-      paddingHorizontal: 6, // 🔹 Reduce el ancho sin afectar la legibilidad
-      marginLeft: 6, // 🔹 Ajuste menor del margen
-      minWidth: 50, // 🔹 Asegura un ancho mínimo sin ser excesivo
-      alignItems: "center",
-    }}
-  >
-    <Text
-      style={[
-        styles.label,
-        {
-          color: colors.text_black,
-          fontSize: 12, // 🔹 Un tamaño de texto más compacto
-          textAlign: "center",
-          letterSpacing: 0.2, // 🔹 Reduce la separación de letras
-          fontWeight: "600", // 🔹 Se mantiene negrita sin ser excesivo
-        },
-      ]}
-    >
-      {isBuy ? "HISTORIAL DE LA COMPRA" : "HISTORIAL DE LA VENTA"}
-    </Text>
-  </View>
-</TouchableOpacity>
-
+            <View
+              style={{
+                backgroundColor: isBuy ? colors.primary : colors.secondary,
+                borderRadius: 4,
+                paddingVertical: 2,
+                paddingHorizontal: 6, // 🔹 Reduce el ancho sin afectar la legibilidad
+                marginLeft: 6, // 🔹 Ajuste menor del margen
+                minWidth: 50, // 🔹 Asegura un ancho mínimo sin ser excesivo
+                alignItems: "center",
+              }}
+            >
+              <Text
+                style={[
+                  styles.label,
+                  {
+                    color: colors.text_black,
+                    fontSize: 12, // 🔹 Un tamaño de texto más compacto
+                    textAlign: "center",
+                    letterSpacing: 0.2, // 🔹 Reduce la separación de letras
+                    fontWeight: "600", // 🔹 Se mantiene negrita sin ser excesivo
+                  },
+                ]}
+              >
+                {isBuy ? "HISTORIAL DE LA COMPRA" : "HISTORIAL DE LA VENTA"}
+              </Text>
+            </View>
+          </TouchableOpacity>
         </Card.Content>
       </Card>
 
@@ -364,7 +394,10 @@ const SnackPositionCard = ({ position, viewMode, onUpdate }) => {
           <Button
             mode="contained"
             onPress={() => setModalVisible(false)}
-            style={[styles.closeButton, {marginTop: 10, backgroundColor: colors.primary }]}
+            style={[
+              styles.closeButton,
+              { marginTop: 10, backgroundColor: colors.primary },
+            ]}
             labelStyle={{ color: "#000" }}
           >
             Cerrar
@@ -389,7 +422,6 @@ const SnackPositionCard = ({ position, viewMode, onUpdate }) => {
             positionId={position.id}
             onClose={handleUpdateAfterPartialAdd}
           />
-          
         </ScrollView>
       </Modal>
 
@@ -406,10 +438,12 @@ const SnackPositionCard = ({ position, viewMode, onUpdate }) => {
         >
           <SnackPositionReport data={positionData} />
           <Button
-           
             mode="contained"
             onPress={() => setHistoryModalVisible(false)}
-            style={[styles.closeButton, {marginTop: 10, backgroundColor: colors.primary }]}
+            style={[
+              styles.closeButton,
+              { marginTop: 10, backgroundColor: colors.primary },
+            ]}
             labelStyle={{ color: fonts.text_black }}
           >
             Cerrar

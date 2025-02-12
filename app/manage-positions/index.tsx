@@ -28,6 +28,7 @@ import { MaterialIcons } from "@expo/vector-icons"; // ✅ Importar el icono de 
 import { fetchPortfolioProfitability } from "@/recipes/calculators/CalculatePortfolioProfitability";
 import LottieException from "@/components/snacks/animations/LottieException";
 import SnackTradingHistory from "@/components/snacks/portfolio/SnackTradingHistory";
+import { useWindowDimensions } from "react-native";
 
 // Define the Position type
 interface Position {
@@ -95,6 +96,10 @@ export default function ManagePositions() {
       setLoading(false);
     }
   };
+
+  const { width } = useWindowDimensions(); // 📌 Obtiene el ancho de la pantalla
+const numColumns = width < 600 ? 1 : width < 900 ? 2 : 3; // 📌 Móvil: 1 columna, Tablet: 2, Pantallas grandes: 3
+
 
   const fetchClosedPositionsWithFilter = async () => {
     try {
@@ -175,7 +180,7 @@ export default function ManagePositions() {
               )}
             </View>
 
-            <View style={styles.switchGroup}>
+            {/*<View style={styles.switchGroup}>
               <Text style={styles.switchLabel}>Vista:</Text>
               <Switch
                 value={viewMode === "table"}
@@ -188,7 +193,7 @@ export default function ManagePositions() {
               <Text style={styles.switchText}>
                 {viewMode === "card" ? "Tarjetas" : "Tabla"}
               </Text>
-            </View>
+            </View>*/}
           </View>
 
           <TouchableOpacity
@@ -198,7 +203,7 @@ export default function ManagePositions() {
                 "➡ Datos actuales de portfolioResult:",
                 portfolioResult
               );
-              setHistoryModalVisible(true);
+              setHistoryModalVisible(false);
             }}
           >
             <View style={[styles.portfolioResultContainer]}>
@@ -247,16 +252,20 @@ export default function ManagePositions() {
           </View>
         ) : viewMode === "card" ? (
           <FlatList
-            data={showClosed ? filteredClosedPositions : positions}
-            renderItem={({ item }) => (
-              <SnackPositionCard
-                position={item}
-                viewMode={viewMode}
-                onUpdate={loadPositions}
-              />
-            )}
-            keyExtractor={(item) => item.id.toString()}
-          />
+  key={`flatlist-${numColumns}`} // 🔹 Fuerza un re-render cuando numColumns cambia
+  data={showClosed ? filteredClosedPositions : positions}
+  renderItem={({ item }) => (
+    <SnackPositionCard
+      position={item}
+      viewMode={viewMode}
+      onUpdate={loadPositions}
+    />
+  )}
+  keyExtractor={(item) => item.id.toString()}
+  numColumns={numColumns} // ✅ Se mantiene dinámico
+  columnWrapperStyle={numColumns > 1 ? { justifyContent: "space-between", paddingHorizontal: 8 } : undefined}
+  contentContainerStyle={{ paddingHorizontal: 8 }}
+/>
         ) : (
           <SnackPositionTable
             positions={positions}
@@ -582,5 +591,21 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#FFF",
     textAlign: "center",
+  },
+  flatListContainer: {
+    flex: 1,
+    paddingBottom: 20, // Espaciado inferior
+  },
+  columnWrapper: {
+    justifyContent: "space-between", // Distribuye bien las tarjetas en varias columnas
+    paddingHorizontal: 10, // Espaciado lateral en pantallas grandes
+  },
+  cardContainer: {
+    flex: 1,
+    backgroundColor: "#FFF",
+    borderRadius: 10,
+    padding: 15,
+    margin: 10, // Espaciado entre tarjetas
+    elevation: 3,
   },
 });
