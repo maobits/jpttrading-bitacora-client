@@ -1,17 +1,17 @@
 {
-    "isDevelopment": false,
-    "development": {
-        "server": {
-            "name": "JPTT-LOCALHOST",
-            "ip": "localhost",
-            "port": 3000
-        }
-    },
-    "production": {
-        "server": {
-            "name": "ProdServer",
-            "ip": "jpttrading-bitacora-server-1.onrender.com",
-            "port": 3500
-        }
+  "isDevelopment": false,
+  "development": {
+    "server": {
+      "name": "JPTT-LOCALHOST",
+      "ip": "localhost",
+      "port": 3000
     }
+  },
+  "production": {
+    "server": {
+      "name": "ProdServer",
+      "ip": "jpttrading-bitacora-server-1.onrender.com",
+      "port": 3500
+    }
+  }
 }

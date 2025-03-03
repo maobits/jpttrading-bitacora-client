@@ -1,17 +1,17 @@
 {
-    "isDevelopment": false,
-    "development": {
-        "server": {
-            "name": "JPTT-LOCALHOST",
-            "ip": "localhost",
-            "port": 3600
-        }
-    },
-    "production": {
-        "server": {
-            "name": "ProdServer",
-            "ip": "profitability-calculator-1.onrender.com",
-            "port": 3600
-        }
+  "isDevelopment": false,
+  "development": {
+    "server": {
+      "name": "JPTT-LOCALHOST",
+      "ip": "localhost",
+      "port": 3600
     }
+  },
+  "production": {
+    "server": {
+      "name": "ProdServer",
+      "ip": "profitability-calculator-1.onrender.com",
+      "port": 3600
+    }
+  }
 }
