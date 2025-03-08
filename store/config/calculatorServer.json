@@ -3,14 +3,14 @@
   "development": {
     "server": {
       "name": "JPTT-LOCALHOST",
-      "ip": "localhost",
+      "ip": "ttrading.shop",
       "port": 3600
     }
   },
   "production": {
     "server": {
       "name": "ProdServer",
-      "ip": "profitability-calculator-1.onrender.com",
+      "ip": "ttrading.shop:3600",
       "port": 3600
     }
   }
