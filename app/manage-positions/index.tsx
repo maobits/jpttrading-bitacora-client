@@ -21,6 +21,7 @@ import LottieException from "@/components/snacks/animations/LottieException";
 import SnackTradingHistory from "@/components/snacks/portfolio/SnackTradingHistory";
 import { useWindowDimensions } from "react-native";
 import { Button, IconButton } from "react-native-paper";
+import { obtenerRentabilidadTotal } from "@/recipes/calculators/ObtenerRentabilitadTotal";
 
 // Define the Position type
 interface Position {
@@ -54,6 +55,10 @@ export default function ManagePositions() {
     Position[]
   >([]);
 
+  const [totalRentabilidadCerrada, setTotalRentabilidadCerrada] =
+    useState<string>("0.00");
+  const [totalPosiciones, setTotalPosiciones] = useState<number>(0);
+
   const loadPositions = async () => {
     try {
       console.log(`Loading ${showClosed ? "closed" : "open"} positions...`);
@@ -72,6 +77,21 @@ export default function ManagePositions() {
 
       setPositions(data.results);
       console.log("Positions loaded:", data.results);
+
+      // 📌 Calcular rentabilidad total cerrada con `obtenerRentabilidadTotal`
+      const resultadoRentabilidad = await obtenerRentabilidadTotal(
+        data.results
+      );
+
+      //
+      console.log(
+        "✅ Esto es importante: Resultado de Rentabilidad:",
+        resultadoRentabilidad
+      );
+
+      // 📌 Guardamos los valores en el estado
+      setTotalRentabilidadCerrada(resultadoRentabilidad.sumaTotalRentabilidad);
+      setTotalPosiciones(resultadoRentabilidad.numeroDePosiciones);
 
       // 📌 Llamamos la función para calcular el portafolio
       const portfolioData = await fetchPortfolioProfitability(data);
@@ -204,7 +224,7 @@ export default function ManagePositions() {
                 "➡ Datos actuales de portfolioResult:",
                 portfolioResult
               );
-              setHistoryModalVisible(true);
+              setHistoryModalVisible(false);
             }}
           >
             <View style={[styles.portfolioResultContainer]}>
@@ -212,11 +232,11 @@ export default function ManagePositions() {
               <View style={styles.portfolioCard}>
                 <Text style={styles.portfolioResultValue}>
                   {showClosed
-                    ? portfolioResult?.estadoGeneral?.rentabilidadTotalCerrada
-                      ? `RTC: ${portfolioResult.estadoGeneral.rentabilidadTotalCerrada}%`
+                    ? totalRentabilidadCerrada !== "0.00"
+                      ? `RTC: ${totalRentabilidadCerrada}%`
                       : "Sin datos"
-                    : portfolioResult?.estadoGeneral?.rentabilidadTotalActiva
-                    ? `RTA: ${portfolioResult.estadoGeneral.rentabilidadTotalActiva}%`
+                    : portfolioResult?.rentabilidadTotalActiva
+                    ? `RTA: ${portfolioResult.rentabilidadTotalActiva}%`
                     : "Sin datos"}
                 </Text>
               </View>

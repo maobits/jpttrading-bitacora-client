@@ -3,7 +3,7 @@
   "development": {
     "server": {
       "name": "JPTT-LOCALHOST",
-      "ip": "ttrading.shop",
+      "ip": "localhost",
       "port": 3600
     }
   },

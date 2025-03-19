@@ -68,21 +68,26 @@ const SnackPositionCard = ({ position, viewMode, onUpdate }) => {
   const { width } = useWindowDimensions(); // 📌 Obtiene el ancho de la pantalla
 
   const numColumns =
-    width < 480 ? 1   // Móviles pequeños
-  : width < 768 ? 2   // Teléfonos grandes / Tablets pequeñas
-  : width < 1024 ? 3  // Tablets medianas
-  : width < 1440 ? 4  // Laptops y monitores 1080p
-  : width < 2560 ? 5  // Monitores 2K
-  : 6; // ✅ Monitores 4K (3840x2160) tendrán **6 columnas**
+    width < 480
+      ? 1 // Móviles pequeños
+      : width < 768
+      ? 2 // Teléfonos grandes / Tablets pequeñas
+      : width < 1024
+      ? 3 // Tablets medianas
+      : width < 1440
+      ? 4 // Laptops y monitores 1080p
+      : width < 2560
+      ? 5 // Monitores 2K
+      : 6; // ✅ Monitores 4K (3840x2160) tendrán **6 columnas**
 
   const margin = 6; // 📌 Margen reducido para que más tarjetas encajen sin exceso de espacio
   const totalMargin = margin * (numColumns + 1); // 📌 Cálculo preciso del espacio total ocupado por los márgenes
-  
-  const cardWidth = numColumns === 1 
-    ? width * 0.75 // 📌 En móviles, la tarjeta ocupa el 95% del ancho total para que no se desborde
-    : (width - totalMargin) / numColumns; // 📌 Divide el ancho total disponible entre las columnas sin desperdiciar espacio
-  
- 
+
+  const cardWidth =
+    numColumns === 1
+      ? width * 0.75 // 📌 En móviles, la tarjeta ocupa el 95% del ancho total para que no se desborde
+      : (width - totalMargin) / numColumns; // 📌 Divide el ancho total disponible entre las columnas sin desperdiciar espacio
+
   useEffect(() => {
     const obtenerRentabilidad = async () => {
       const result = await fetchPositionProfitability(position);
