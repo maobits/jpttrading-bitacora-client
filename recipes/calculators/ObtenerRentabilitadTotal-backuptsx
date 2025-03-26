@@ -1,0 +1,96 @@
+import { useState } from "react";
+import { fetchPositionProfitability } from "./PositionProfitabilityCalculator";
+
+// Definimos la interfaz para el formato de datos esperado en el portafolio
+interface PositionData {
+  id: number;
+  order: string;
+  Symbol: string;
+  PriceEntry: string;
+  StopLoss: string;
+  TakeProfit: string;
+  TradeDirection: string;
+  PositionType: string;
+  TakeProfit2: string;
+  ActiveAllocation: string;
+  TradeDate: string;
+  ClosingDate: string;
+}
+
+// Definimos la interfaz del resultado final
+interface RentabilidadTotalResult {
+  sumaTotalRentabilidad: string;
+  numeroDePosiciones: number;
+}
+
+export const obtenerRentabilidadTotal = async (
+  portfolio: PositionData[]
+): Promise<RentabilidadTotalResult> => {
+  let sumaRentabilidadTotal = 0;
+  let totalPosiciones = 0;
+
+  console.log("📦[DEBUG ACTUAL] Procesando el portafolio completo...");
+
+  for (const position of portfolio) {
+    console.log(`📌 Obteniendo rentabilidad para: ${position.Symbol}`);
+
+    try {
+      const result = await fetchPositionProfitability(position);
+
+      // Buscamos la rentabilidad total cerrada en el historial
+      const rentabilidadCerrada = result?.historial?.find(
+        (item: any) => item.tipo === "cierre_total"
+      )?.rentabilidadTotal;
+
+      if (
+        rentabilidadCerrada !== undefined &&
+        !isNaN(parseFloat(rentabilidadCerrada))
+      ) {
+        sumaRentabilidadTotal += parseFloat(rentabilidadCerrada);
+      }
+
+      totalPosiciones++;
+    } catch (error) {
+      console.error(
+        `❌ Error obteniendo la rentabilidad de ${position.Symbol}:`,
+        error
+      );
+    }
+  }
+
+  console.log("\n✅ Rentabilidad Total Cerrada Calculada");
+  console.log(
+    `🔹 Suma de Rentabilidades Cerradas: ${sumaRentabilidadTotal.toFixed(2)}`
+  );
+  console.log(`🔹 Número Total de Posiciones: ${totalPosiciones}`);
+
+  return {
+    sumaTotalRentabilidad: sumaRentabilidadTotal.toFixed(2),
+    numeroDePosiciones: totalPosiciones,
+  };
+};
+
+// Componente de React para mostrar la rentabilidad total
+const RentabilidadTotalComponent: React.FC<{ portfolio: PositionData[] }> = ({
+  portfolio,
+}) => {
+  const [rentabilidadTotal, setRentabilidadTotal] = useState<string>("0.00");
+  const [totalPosiciones, setTotalPosiciones] = useState<number>(0);
+
+  const calcularRentabilidad = async () => {
+    const resultado = await obtenerRentabilidadTotal(portfolio);
+    setRentabilidadTotal(resultado.sumaTotalRentabilidad);
+    setTotalPosiciones(resultado.numeroDePosiciones);
+  };
+
+  return (
+    <div>
+      <h2>📊 Rentabilidad Total</h2>
+      <p>🔹 Rentabilidad Total Cerrada: {rentabilidadTotal}%</p>
+      <p>🔹 Número Total de Posiciones: {totalPosiciones}</p>
+      <button onClick={calcularRentabilidad}>Calcular Rentabilidad</button>
+    </div>
+  );
+};
+
+export default RentabilidadTotalComponent;

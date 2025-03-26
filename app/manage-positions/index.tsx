@@ -57,7 +57,6 @@ export default function ManagePositions() {
 
   const [totalRentabilidadCerrada, setTotalRentabilidadCerrada] =
     useState<string>("0.00");
-  const [totalPosiciones, setTotalPosiciones] = useState<number>(0);
 
   const loadPositions = async () => {
     try {
@@ -76,7 +75,7 @@ export default function ManagePositions() {
       }
 
       setPositions(data.results);
-      console.log("Positions loaded:", data.results);
+      console.log("DEBUG IMPORTANTE (Posiciones cargadas):", data.results);
 
       // 📌 Calcular rentabilidad total cerrada con `obtenerRentabilidadTotal`
       const resultadoRentabilidad = await obtenerRentabilidadTotal(
@@ -85,13 +84,14 @@ export default function ManagePositions() {
 
       //
       console.log(
-        "✅ Esto es importante: Resultado de Rentabilidad:",
+        "✅ [BUG ACTUAL] Esto es importante: Resultado de Rentabilidad:",
         resultadoRentabilidad
       );
 
       // 📌 Guardamos los valores en el estado
-      setTotalRentabilidadCerrada(resultadoRentabilidad.sumaTotalRentabilidad);
-      setTotalPosiciones(resultadoRentabilidad.numeroDePosiciones);
+      setTotalRentabilidadCerrada(
+        resultadoRentabilidad.rentabilidadTotalCompuesta
+      );
 
       // 📌 Llamamos la función para calcular el portafolio
       const portfolioData = await fetchPortfolioProfitability(data);

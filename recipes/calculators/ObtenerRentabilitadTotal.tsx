@@ -1,8 +1,7 @@
-import { useState } from "react";
 import { fetchPositionProfitability } from "./PositionProfitabilityCalculator";
 
-// Definimos la interfaz para el formato de datos esperado en el portafolio
-interface PositionData {
+// Interfaz para los datos del portafolio
+export interface PositionData {
   id: number;
   order: string;
   Symbol: string;
@@ -17,80 +16,86 @@ interface PositionData {
   ClosingDate: string;
 }
 
-// Definimos la interfaz del resultado final
-interface RentabilidadTotalResult {
-  sumaTotalRentabilidad: string;
-  numeroDePosiciones: number;
+// Interfaz del resultado final
+export interface RentabilidadTotalResult {
+  detallePorMes: {
+    [mes: string]: {
+      promedioMensual: number;
+      numeroRegistros: number;
+      rentabilidades: number[];
+    };
+  };
+  rentabilidadTotalCompuesta: number;
 }
 
 export const obtenerRentabilidadTotal = async (
   portfolio: PositionData[]
 ): Promise<RentabilidadTotalResult> => {
-  let sumaRentabilidadTotal = 0;
-  let totalPosiciones = 0;
+  const agrupadoPorMes: Record<string, number[]> = {};
 
-  console.log("📦 Procesando el portafolio completo...");
+  console.log("📦 Iniciando análisis de rentabilidad total del portafolio...");
+  console.log(`📊 Total de posiciones a procesar: ${portfolio.length}`);
 
   for (const position of portfolio) {
-    console.log(`📌 Obteniendo rentabilidad para: ${position.Symbol}`);
+    console.log(`\n➡️ Procesando posición: ${position.Symbol}`);
 
     try {
       const result = await fetchPositionProfitability(position);
+      console.log("🔍 Resultado:", result);
 
-      // Buscamos la rentabilidad total cerrada en el historial
-      const rentabilidadCerrada = result?.historial?.find(
-        (item: any) => item.tipo === "cierre_total"
-      )?.rentabilidadTotal;
+      const date = result?.date;
+      const rentabilidadStr = result?.estadoActual?.rentabilidadTotal;
+      const rentabilidad = parseFloat(rentabilidadStr);
 
-      if (
-        rentabilidadCerrada !== undefined &&
-        !isNaN(parseFloat(rentabilidadCerrada))
-      ) {
-        sumaRentabilidadTotal += parseFloat(rentabilidadCerrada);
+      if (date && !isNaN(rentabilidad)) {
+        const mes = date.slice(0, 7);
+        console.log(`📅 Fecha de la posición: ${date} (grupo: ${mes})`);
+        console.log(`📈 Rentabilidad total: ${rentabilidadStr}%`);
+
+        if (!agrupadoPorMes[mes]) {
+          agrupadoPorMes[mes] = [];
+        }
+
+        agrupadoPorMes[mes].push(rentabilidad);
+      } else {
+        console.warn(
+          `⚠️ Rentabilidad inválida o sin fecha para: ${position.Symbol}`
+        );
       }
-
-      totalPosiciones++;
     } catch (error) {
-      console.error(
-        `❌ Error obteniendo la rentabilidad de ${position.Symbol}:`,
-        error
-      );
+      console.error(`❌ Error procesando ${position.Symbol}:`, error);
     }
   }
 
-  console.log("\n✅ Rentabilidad Total Cerrada Calculada");
+  const detallePorMes: RentabilidadTotalResult["detallePorMes"] = {};
+  let rentabilidadCompuesta = 1;
+
+  console.log("\n📊 Calculando promedios por mes...");
+
+  for (const mes in agrupadoPorMes) {
+    const valores = agrupadoPorMes[mes];
+    const promedio = valores.reduce((a, b) => a + b, 0) / valores.length;
+
+    console.log(`🗓️ Mes: ${mes}`);
+    console.log(`   ➕ Rentabilidades: ${valores.join(", ")}`);
+    console.log(`   📊 Promedio mensual: ${promedio.toFixed(4)}%`);
+
+    detallePorMes[mes] = {
+      promedioMensual: parseFloat(promedio.toFixed(4)),
+      numeroRegistros: valores.length,
+      rentabilidades: valores,
+    };
+
+    rentabilidadCompuesta *= 1 + promedio / 100;
+  }
+
+  rentabilidadCompuesta = (rentabilidadCompuesta - 1) * 100;
   console.log(
-    `🔹 Suma de Rentabilidades Cerradas: ${sumaRentabilidadTotal.toFixed(2)}`
+    `\n📈 Rentabilidad total compuesta: ${rentabilidadCompuesta.toFixed(2)}%\n`
   );
-  console.log(`🔹 Número Total de Posiciones: ${totalPosiciones}`);
 
   return {
-    sumaTotalRentabilidad: sumaRentabilidadTotal.toFixed(2),
-    numeroDePosiciones: totalPosiciones,
+    detallePorMes,
+    rentabilidadTotalCompuesta: parseFloat(rentabilidadCompuesta.toFixed(2)),
   };
 };
-
-// Componente de React para mostrar la rentabilidad total
-const RentabilidadTotalComponent: React.FC<{ portfolio: PositionData[] }> = ({
-  portfolio,
-}) => {
-  const [rentabilidadTotal, setRentabilidadTotal] = useState<string>("0.00");
-  const [totalPosiciones, setTotalPosiciones] = useState<number>(0);
-
-  const calcularRentabilidad = async () => {
-    const resultado = await obtenerRentabilidadTotal(portfolio);
-    setRentabilidadTotal(resultado.sumaTotalRentabilidad);
-    setTotalPosiciones(resultado.numeroDePosiciones);
-  };
-
-  return (
-    <div>
-      <h2>📊 Rentabilidad Total</h2>
-      <p>🔹 Rentabilidad Total Cerrada: {rentabilidadTotal}%</p>
-      <p>🔹 Número Total de Posiciones: {totalPosiciones}</p>
-      <button onClick={calcularRentabilidad}>Calcular Rentabilidad</button>
-    </div>
-  );
-};
-
-export default RentabilidadTotalComponent;

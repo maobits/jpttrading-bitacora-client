@@ -12,6 +12,7 @@ interface PositionData {
   PositionType: string;
   TakeProfit2: string;
   ActiveAllocation: string;
+  ClosingDate: string;
 }
 
 export async function fetchPositionProfitability(position: PositionData) {
@@ -29,6 +30,8 @@ export async function fetchPositionProfitability(position: PositionData) {
       priceEntries.find((entry: any) => entry.id === 1)?.price || "0"
     );
     const symbol = position.Symbol;
+
+    const closingDate = position.ClosingDate;
 
     const transacciones = priceEntries
       .slice(1)
@@ -50,7 +53,13 @@ export async function fetchPositionProfitability(position: PositionData) {
       })
       .filter(Boolean);
 
-    const requestData = { tipoPosicion, precioEntrada, symbol, transacciones };
+    const requestData = {
+      tipoPosicion,
+      precioEntrada,
+      symbol,
+      transacciones,
+      closingDate,
+    };
 
     console.log(
       "📤 Objeto enviado a la calculadora:",
