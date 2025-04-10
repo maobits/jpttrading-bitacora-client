@@ -26,6 +26,7 @@ export interface RentabilidadTotalResult {
     };
   };
   rentabilidadTotalCompuesta: number;
+  rentabilidadTotalCompuestaDecimal: number;
 }
 
 export const obtenerRentabilidadTotal = async (
@@ -67,8 +68,14 @@ export const obtenerRentabilidadTotal = async (
     }
   }
 
+  // 👇 Aquí se muestra el objeto agrupado
+  console.log(
+    "🧾 RTC - Colección agrupada por meses:",
+    JSON.stringify(agrupadoPorMes, null, 2)
+  );
+
   const detallePorMes: RentabilidadTotalResult["detallePorMes"] = {};
-  let rentabilidadCompuesta = 1;
+  let rentabilidadCompuestaDecimal = 1;
 
   console.log("\n📊 Calculando promedios por mes...");
 
@@ -86,16 +93,35 @@ export const obtenerRentabilidadTotal = async (
       rentabilidades: valores,
     };
 
-    rentabilidadCompuesta *= 1 + promedio / 100;
+    // Aplicar como decimal directamente
+    const promedioDecimal = parseFloat((promedio / 100).toFixed(5));
+    console.log(
+      `🔢 Aplicando: rentabilidadCompuestaDecimal *= 1 + ${promedioDecimal};`
+    );
+    rentabilidadCompuestaDecimal *= 1 + promedioDecimal;
   }
 
-  rentabilidadCompuesta = (rentabilidadCompuesta - 1) * 100;
+  const rentabilidadTotalCompuestaDecimal = rentabilidadCompuestaDecimal - 1;
+  const rentabilidadTotalCompuesta = rentabilidadTotalCompuestaDecimal * 100;
+
   console.log(
-    `\n📈 Rentabilidad total compuesta: ${rentabilidadCompuesta.toFixed(2)}%\n`
+    `\n📈 Rentabilidad total compuesta (decimal): ${rentabilidadTotalCompuestaDecimal.toFixed(
+      4
+    )}`
+  );
+  console.log(
+    `📈 Rentabilidad total compuesta final: ${rentabilidadTotalCompuesta.toFixed(
+      2
+    )}%\n`
   );
 
   return {
     detallePorMes,
-    rentabilidadTotalCompuesta: parseFloat(rentabilidadCompuesta.toFixed(2)),
+    rentabilidadTotalCompuesta: parseFloat(
+      rentabilidadTotalCompuesta.toFixed(2)
+    ),
+    rentabilidadTotalCompuestaDecimal: parseFloat(
+      rentabilidadTotalCompuestaDecimal.toFixed(6)
+    ),
   };
 };

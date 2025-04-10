@@ -141,9 +141,13 @@ export default function ManagePositions() {
   }, [showClosed]); // Se ejecuta cuando showClosed cambia a true
 
   useEffect(() => {
-    setLoading(true); // Mostrar loader mientras se cargan los datos
-    loadPositions();
-  }, [showClosed]); // Se ejecutará cuando `showClosed` cambie
+    if (showClosed) {
+      console.log(
+        `🔄 Cambió el filtro de meses (${selectedMonths}), recargando...`
+      );
+      loadPositions();
+    }
+  }, [selectedMonths, showClosed]);
 
   const handleNewPosition = async (newPosition: Position) => {
     setPositions((prevPositions) => [newPosition, ...prevPositions]);
@@ -183,7 +187,11 @@ export default function ManagePositions() {
                   onPress={() => setMonthsFilterModalVisible(true)}
                 >
                   <Text style={[styles.switchText, styles.linkText]}>
-                    {selectedMonths} {selectedMonths === 1 ? "mes" : "meses"}
+                    {selectedMonths === 0
+                      ? "YTD (Ene-Mar)"
+                      : `${selectedMonths} ${
+                          selectedMonths === 1 ? "mes" : "meses"
+                        }`}
                   </Text>
                 </TouchableOpacity>
               ) : (
@@ -354,25 +362,29 @@ export default function ManagePositions() {
 
               {/* 🔹 ScrollView permite desplazarse en caso de contenido extenso */}
               <ScrollView style={styles.scrollContainer}>
-                {Array.from({ length: 12 }, (_, i) => i + 1).map((month) => (
-                  <TouchableOpacity
-                    key={month}
-                    onPress={() => setSelectedMonths(month)}
-                    style={[
-                      styles.monthItem,
-                      selectedMonths === month && styles.selectedMonthItem,
-                    ]}
-                  >
-                    <Text
+                {[0, ...Array.from({ length: 12 }, (_, i) => i + 1)].map(
+                  (month) => (
+                    <TouchableOpacity
+                      key={month}
+                      onPress={() => setSelectedMonths(month)}
                       style={[
-                        styles.monthItemText,
-                        selectedMonths === month && styles.selectedMonthText,
+                        styles.monthItem,
+                        selectedMonths === month && styles.selectedMonthItem,
                       ]}
                     >
-                      {month} {month === 1 ? "mes" : "meses"}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
+                      <Text
+                        style={[
+                          styles.monthItemText,
+                          selectedMonths === month && styles.selectedMonthText,
+                        ]}
+                      >
+                        {month === 0
+                          ? "YTD (Ene-Mar)"
+                          : `${month} ${month === 1 ? "mes" : "meses"}`}
+                      </Text>
+                    </TouchableOpacity>
+                  )
+                )}
               </ScrollView>
 
               {/* Botón para aplicar el filtro */}
