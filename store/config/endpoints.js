@@ -5,7 +5,7 @@ const { ip, port } = connectionService.getServerConfig();
 const serverConfig = config.isDevelopment
   ? config.development.server
   : config.production.server;
-IS_DEV_MODE = false;
+IS_DEV_MODE = true;
 
 // Definir la configuración basada en el modo de desarrollo
 const ENDPOINTS = IS_DEV_MODE
