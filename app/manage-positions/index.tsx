@@ -50,7 +50,7 @@ export default function ManagePositions() {
   const [historyModalVisible, setHistoryModalVisible] = useState(false); // 📌 Estado para mostrar el historial
   const [monthsFilterModalVisible, setMonthsFilterModalVisible] =
     useState(false);
-  const [selectedMonths, setSelectedMonths] = useState<number>(1);
+  const [selectedMonths, setSelectedMonths] = useState<number>(13);
   const [filteredClosedPositions, setFilteredClosedPositions] = useState<
     Position[]
   >([]);
@@ -112,17 +112,24 @@ export default function ManagePositions() {
   const { width } = useWindowDimensions(); // 📌 Obtiene el ancho de la pantalla
   const numColumns = width < 600 ? 1 : width < 900 ? 2 : 3; // 📌 Móvil: 1 columna, Tablet: 2, Pantallas grandes: 3
 
-  const fetchClosedPositionsWithFilter = async () => {
+  const fetchClosedPositionsWithFilter = async (mes: number) => {
     try {
       setLoading(true);
-      console.log(
-        `Fetching closed positions with ${selectedMonths} months filter...`
+      console.log(`📤 Enviando al servidor el filtro: ${mes} mes(es)`);
+
+      const data = await PositionsService.getClosedPositionsWithFilter(mes);
+
+      setFilteredClosedPositions(data.results);
+
+      const resultadoRentabilidad = await obtenerRentabilidadTotal(
+        data.results
+      );
+      setTotalRentabilidadCerrada(
+        resultadoRentabilidad.rentabilidadTotalCompuesta.toFixed(2)
       );
 
-      const data = await PositionsService.getClosedPositionsWithFilter(
-        selectedMonths
-      );
-      setFilteredClosedPositions(data.results);
+      const portfolioData = await fetchPortfolioProfitability(data);
+      setPortfolioResult(portfolioData);
     } catch (error) {
       console.error("❌ Error fetching filtered closed positions:", error);
     } finally {
@@ -136,18 +143,14 @@ export default function ManagePositions() {
       console.log(
         `🔄 Cargando posiciones cerradas con filtro de ${selectedMonths} meses...`
       );
-      fetchClosedPositionsWithFilter();
+      fetchClosedPositionsWithFilter(selectedMonths); // ✅ ahora pasas el mes
     }
-  }, [showClosed]); // Se ejecuta cuando showClosed cambia a true
+  }, [showClosed, selectedMonths]); // ✅ se ejecuta si cambia `showClosed` o el mes
 
   useEffect(() => {
-    if (showClosed) {
-      console.log(
-        `🔄 Cambió el filtro de meses (${selectedMonths}), recargando...`
-      );
-      loadPositions();
-    }
-  }, [selectedMonths, showClosed]);
+    setLoading(true); // Mostrar loader mientras se cargan los datos
+    loadPositions();
+  }, [showClosed]); // Se ejecutará cuando `showClosed` cambie
 
   const handleNewPosition = async (newPosition: Position) => {
     setPositions((prevPositions) => [newPosition, ...prevPositions]);
@@ -187,8 +190,8 @@ export default function ManagePositions() {
                   onPress={() => setMonthsFilterModalVisible(true)}
                 >
                   <Text style={[styles.switchText, styles.linkText]}>
-                    {selectedMonths === 0
-                      ? "YTD (Ene-Mar)"
+                    {selectedMonths === 13
+                      ? "YTD"
                       : `${selectedMonths} ${
                           selectedMonths === 1 ? "mes" : "meses"
                         }`}
@@ -362,11 +365,15 @@ export default function ManagePositions() {
 
               {/* 🔹 ScrollView permite desplazarse en caso de contenido extenso */}
               <ScrollView style={styles.scrollContainer}>
-                {[0, ...Array.from({ length: 12 }, (_, i) => i + 1)].map(
+                {[13, ...Array.from({ length: 12 }, (_, i) => i + 1)].map(
                   (month) => (
                     <TouchableOpacity
                       key={month}
-                      onPress={() => setSelectedMonths(month)}
+                      onPress={() => {
+                        console.log("📤 Mes seleccionado:", month);
+                        setSelectedMonths(month);
+                        fetchClosedPositionsWithFilter(month);
+                      }}
                       style={[
                         styles.monthItem,
                         selectedMonths === month && styles.selectedMonthItem,
@@ -378,23 +385,14 @@ export default function ManagePositions() {
                           selectedMonths === month && styles.selectedMonthText,
                         ]}
                       >
-                        {month === 0
-                          ? "YTD (Ene-Mar)"
+                        {month === 13
+                          ? "YTD"
                           : `${month} ${month === 1 ? "mes" : "meses"}`}
                       </Text>
                     </TouchableOpacity>
                   )
                 )}
               </ScrollView>
-
-              {/* Botón para aplicar el filtro */}
-              <Button
-                mode="contained"
-                onPress={fetchClosedPositionsWithFilter}
-                style={styles.applyButton}
-              >
-                <Text style={styles.applyButtonText}>Aplicar Filtro</Text>
-              </Button>
             </View>
           </View>
         </Modal>
